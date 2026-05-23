@@ -44,29 +44,14 @@ db.serialize(() => {
         nama_item TEXT
     )`);
 
-    // PERBAIKAN: Tabel proses sekarang merekam untuk jenis_barang apa
     db.run(`CREATE TABLE IF NOT EXISTS master_proses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         jenis_barang TEXT,
         nama_proses TEXT
     )`);
-
-    db.get("SELECT COUNT(*) as count FROM master_items", [], (err, row) => {
-        if (row && row.count === 0) {
-            db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES ('PT A', 'Gift Box', 'Box Oreo isi 6')");
-        }
-    });
-
-    db.get("SELECT COUNT(*) as count FROM master_proses", [], (err, row) => {
-        if (row && row.count === 0) {
-            const prosesAwal = ['Diecut', 'Kopek', 'Longway', 'Coblos', 'Lem Semi', 'Cek Point'];
-            prosesAwal.forEach(p => {
-                db.run("INSERT INTO master_proses (jenis_barang, nama_proses) VALUES ('Gift Box', ?)", [p]);
-            });
-        }
-    });
 });
 
+// API AMBIL DATA MASTER
 app.get('/api/master', (req, res) => {
     db.all("SELECT * FROM master_items", [], (err, items) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -77,6 +62,7 @@ app.get('/api/master', (req, res) => {
     });
 });
 
+// API TAMBAH DATA MASTER
 app.post('/api/master/item', (req, res) => {
     const { customer, jenis_barang, nama_item } = req.body;
     db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES (?, ?, ?)", 
@@ -86,7 +72,6 @@ app.post('/api/master/item', (req, res) => {
     });
 });
 
-// PERBAIKAN: Simpan proses berdasarkan jenis barangnya
 app.post('/api/master/proses', (req, res) => {
     const { jenis_barang, nama_proses } = req.body;
     db.run("INSERT INTO master_proses (jenis_barang, nama_proses) VALUES (?, ?)", [jenis_barang, nama_proses], function(err) {
@@ -95,6 +80,24 @@ app.post('/api/master/proses', (req, res) => {
     });
 });
 
+// ==========================================
+// FITUR BARU: API HAPUS DATA MASTER
+// ==========================================
+app.delete('/api/master/item/:id', (req, res) => {
+    db.run("DELETE FROM master_items WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/master/proses/:id', (req, res) => {
+    db.run("DELETE FROM master_proses WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// API TRANSAKSI PRODUKSI
 app.post('/api/produksi', (req, res) => {
     const { customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng } = req.body;
     db.run(`INSERT INTO produksi (customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -122,7 +125,6 @@ app.get('/api/wip', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         db.all(`SELECT customer, jenis_barang, nama_item, SUM(jumlah_kirim) as total_kirim FROM delivery GROUP BY customer, jenis_barang, nama_item`, [], (err, delivRows) => {
             db.all("SELECT jenis_barang, nama_proses FROM master_proses", [], (err, listProses) => {
-                
                 let hasilWIP = [];
                 let diproses = {};
                 rows.forEach(r => {
@@ -138,7 +140,6 @@ app.get('/api/wip', (req, res) => {
 
                 rows.forEach(r => {
                     const key = `${r.customer}|${r.jenis_barang}|${r.nama_item}`;
-                    // Ambil alur proses khusus untuk jenis barang ini saja
                     const alurProses = listProses.filter(p => p.jenis_barang === r.jenis_barang).map(p => p.nama_proses);
                     const idx = alurProses.indexOf(r.proses_sekarang);
 
