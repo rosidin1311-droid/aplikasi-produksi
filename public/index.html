@@ -23,19 +23,20 @@
                     <p class="text-xs text-gray-300">Akses: <span id="user-display" class="font-bold"></span></p>
                 </div>
                 <div class="space-x-2">
-                    <button onclick="toggleMasterMenu()" id="btn-master" class="bg-yellow-500 text-gray-900 px-3 py-1 text-sm rounded font-bold hover:bg-yellow-400">⚙️ Pengaturan</button>
+                    <button onclick="toggleMasterMenu()" id="btn-master" class="bg-yellow-500 text-gray-900 px-3 py-1 text-sm rounded font-bold hover:bg-yellow-400">⚙️ Pengaturan Data</button>
                     <button onclick="logout()" class="bg-red-500 px-3 py-1 text-sm rounded hover:bg-red-600">Keluar</button>
                 </div>
             </div>
 
             <div id="master-menu" class="hidden bg-yellow-50 p-6 rounded-lg border-2 border-yellow-300 space-y-4 shadow-inner">
-                <h3 class="text-lg font-bold text-yellow-800">⚙️ Kelola Data Master (Customer, Item & Proses)</h3>
+                <h3 class="text-lg font-bold text-yellow-800">⚙️ Kelola Data Master</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded shadow space-y-2">
-                        <h4 class="font-bold text-sm text-gray-600">Tambah Customer & Item Baru:</h4>
-                        <input type="text" id="new-cust" placeholder="Nama Customer (Contoh: PT A)" class="w-full p-2 border rounded text-sm">
-                        <input type="text" id="new-item" placeholder="Nama Item & Model (Contoh: Box Oreo)" class="w-full p-2 border rounded text-sm">
-                        <button onclick="addMasterItem()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Tambah Item</button>
+                        <h4 class="font-bold text-sm text-gray-600">Tambah Customer, Jenis & Item Baru:</h4>
+                        <input type="text" id="new-cust" placeholder="Nama Customer (Contoh: PT Gudang Garam)" class="w-full p-2 border rounded text-sm">
+                        <input type="text" id="new-jenis" placeholder="Jenis Barang (Contoh: Inner Box)" class="w-full p-2 border rounded text-sm">
+                        <input type="text" id="new-item" placeholder="Nama Item (Contoh: Surya 16 isi 10)" class="w-full p-2 border rounded text-sm">
+                        <button onclick="addMasterItem()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Daftarkan Item</button>
                     </div>
                     <div class="bg-white p-4 rounded shadow space-y-2">
                         <h4 class="font-bold text-sm text-gray-600">Tambah Tahapan Proses Baru:</h4>
@@ -43,71 +44,76 @@
                         <button onclick="addMasterProses()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Tambah Proses</button>
                     </div>
                 </div>
-                <p class="text-xs text-amber-700 italic">*Pilihan di menu input harian bawah akan otomatis berubah setelah kamu menambah data di sini.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-bold text-gray-700 mb-4">📝 Input Hasil Kerja Harian</h3>
-                    <div class="space-y-3">
-                        <label class="block text-sm">Pilih Customer & Item Kerja:</label>
-                        <select id="itemKerja" class="w-full p-2 border rounded bg-gray-50"></select>
+                <div class="bg-white p-6 rounded-lg shadow-md space-y-3">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">📝 Input Hasil Kerja Harian</h3>
+                    
+                    <label class="block text-xs font-bold text-gray-500">1. PILIH CUSTOMER</label>
+                    <select id="prod-cust" onchange="updateProdJenis()" class="w-full p-2 border rounded bg-gray-50"></select>
 
-                        <label class="block text-sm">Pilih Proses Saat Ini:</label>
-                        <select id="prosesKerja" class="w-full p-2 border rounded bg-gray-50"></select>
+                    <label class="block text-xs font-bold text-gray-500">2. PILIH JENIS BARANG</label>
+                    <select id="prod-jenis" onchange="updateProdItem()" class="w-full p-2 border rounded bg-gray-50"></select>
 
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm">Jumlah OK:</label>
-                                <input type="number" id="jmlOK" placeholder="0" class="w-full p-2 border rounded">
-                            </div>
-                            <div>
-                                <label class="block text-sm">Jumlah NG:</label>
-                                <input type="number" id="jmlNG" placeholder="0" class="w-full p-2 border rounded">
-                            </div>
+                    <label class="block text-xs font-bold text-gray-500">3. PILIH NAMA ITEM</label>
+                    <select id="prod-item" class="w-full p-2 border rounded bg-gray-50"></select>
+
+                    <label class="block text-xs font-bold text-gray-500">4. PILIH PROSES KERJA</label>
+                    <select id="prod-proses" class="w-full p-2 border rounded bg-gray-50"></select>
+
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <label class="block text-sm">Jumlah OK:</label>
+                            <input type="number" id="jmlOK" placeholder="0" class="w-full p-2 border rounded">
                         </div>
-                        <button onclick="kirimHasil Kerja()" class="w-full bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700">Kirim & Perbarui Stok</button>
+                        <div>
+                            <label class="block text-sm">Jumlah NG:</label>
+                            <input type="number" id="jmlNG" placeholder="0" class="w-full p-2 border rounded">
+                        </div>
                     </div>
+                    <button onclick="kirimHasilKerja()" class="w-full bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700 mt-2">Kirim & Perbarui Stok</button>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-bold text-gray-700 mb-4">🚚 Pengiriman Barang Jadi (Delivery)</h3>
-                    <div class="space-y-3">
-                        <label class="block text-sm">Item dikirim:</label>
-                        <select id="itemDeliv" class="w-full p-2 border rounded bg-gray-50"></select>
+                <div class="bg-white p-6 rounded-lg shadow-md space-y-3">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">🚚 Pengiriman Barang Jadi (Delivery)</h3>
+                    
+                    <label class="block text-xs font-bold text-gray-500">1. PILIH CUSTOMER</label>
+                    <select id="del-cust" onchange="updateDelJenis()" class="w-full p-2 border rounded bg-gray-50"></select>
 
+                    <label class="block text-xs font-bold text-gray-500">2. PILIH JENIS BARANG</label>
+                    <select id="del-jenis" onchange="updateDelItem()" class="w-full p-2 border rounded bg-gray-50"></select>
+
+                    <label class="block text-xs font-bold text-gray-500">3. PILIH NAMA ITEM</label>
+                    <select id="del-item" class="w-full p-2 border rounded bg-gray-50"></select>
+
+                    <div class="pt-2">
                         <label class="block text-sm">No. Surat Jalan:</label>
-                        <input type="text" id="noSJ" placeholder="Contoh: SJ-001" class="w-full p-2 border rounded">
-
+                        <input type="text" id="noSJ" placeholder="Contoh: SJ-001" class="w-full p-2 border rounded mb-2">
                         <label class="block text-sm">Jumlah Kirim (Pcs):</label>
                         <input type="number" id="jmlDeliv" placeholder="0" class="w-full p-2 border rounded">
-
-                        <button onclick="kirim Delivery()" class="w-full bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700">Catat Pengiriman</button>
                     </div>
+
+                    <button onclick="kirimDelivery()" class="w-full bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700 mt-2">Catat Pengiriman</button>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-700">📊 Pantauan Sisa WIP Aktif</h3>
-                        <p class="text-xs text-gray-400">Proses yang sisa antreannya 0 otomatis disembunyikan</p>
-                    </div>
-                    <button onclick="downloadExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-1 hover:bg-emerald-700">📥 Lampirkan ke PPIC (Excel)</button>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-700">📊 Pantauan Sisa WIP Aktif</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse border border-gray-200 text-left text-sm">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700">
                                 <th class="border p-3">Customer</th>
+                                <th class="border p-3">Jenis Barang</th>
                                 <th class="border p-3">Nama Item</th>
                                 <th class="border p-3">Proses Macet</th>
-                                <th class="border p-3">Sisa Antrean (WIP)</th>
+                                <th class="border p-3">Sisa WIP</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelWIP">
-                            <tr><td colspan="4" class="text-center p-4 text-gray-400">Memuat data monitoring...</td></tr>
-                        </tbody>
+                        <tbody id="tabelWIP"></tbody>
                     </table>
                 </div>
             </div>
@@ -117,151 +123,183 @@
 
     <script>
         const API_URL = window.location.origin;
+        let masterItems = [];
 
         function login() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if(u === 'admin' && p === 'admin123') {
-                localStorage.setItem('auth_wip', u);
+            if(document.getElementById('username').value === 'admin' && document.getElementById('password').value === 'admin123') {
+                localStorage.setItem('auth_wip', 'admin');
                 bootApp();
             } else { alert('User/Password Salah!'); }
         }
 
-        function logout() {
-            localStorage.removeItem('auth_wip');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('auth_wip'); location.reload(); }
 
         function bootApp() {
-            const session = localStorage.getItem('auth_wip');
-            if(!session) return;
+            if(!localStorage.getItem('auth_wip')) return;
             document.getElementById('login-box').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('user-display').innerText = session.toUpperCase();
+            document.getElementById('user-display').innerText = 'ADMIN';
             muatMasterData();
             muatTabelWIP();
         }
 
-        function toggleMasterMenu() {
-            const box = document.getElementById('master-menu');
-            box.classList.toggle('hidden');
-        }
+        function toggleMasterMenu() { document.getElementById('master-menu').classList.toggle('hidden'); }
 
         async function muatMasterData() {
             try {
                 const r = await fetch(`${API_URL}/api/master`);
                 const d = await r.json();
-                
-                // Isi Dropdown Item
-                const selItem = document.getElementById('itemKerja');
-                const selDeliv = document.getElementById('itemDeliv');
-                selItem.innerHTML = ''; selDeliv.innerHTML = '';
-                d.items.forEach(i => {
-                    const opt = `<option value="${i.nama_item}">${i.customer} - ${i.nama_item}</option>`;
-                    selItem.innerHTML += opt;
-                    selDeliv.innerHTML += opt;
-                });
+                masterItems = d.items;
 
-                // Isi Dropdown Proses
-                const selProses = document.getElementById('prosesKerja');
-                selProses.innerHTML = '';
-                d.proses.forEach(p => {
-                    selProses.innerHTML += `<option value="${p.nama_proses}">${p.nama_proses}</option>`;
-                });
+                // Isi Dropdown Proses Kerja
+                const pSel = document.getElementById('prod-proses');
+                pSel.innerHTML = '';
+                d.proses.forEach(p => pSel.innerHTML += `<option value="${p.nama_proses}">${p.nama_proses}</option>`);
+
+                // Setup Dropdown Bertingkat (Customer)
+                renderCustomerDropdowns();
             } catch (e) { console.error(e); }
         }
 
-        async function addMasterItem() {
-            const cust = document.getElementById('new-cust').value.trim();
-            const item = document.getElementById('new-item').value.trim();
-            if(!cust || !item) return alert('Isi customer dan nama item!');
+        function renderCustomerDropdowns() {
+            const pelangganUnik = [...new Set(masterItems.map(i => i.customer))];
             
+            const pCust = document.getElementById('prod-cust');
+            const dCust = document.getElementById('del-cust');
+            pCust.innerHTML = ''; dCust.innerHTML = '';
+
+            pelangganUnik.forEach(c => {
+                const opt = `<option value="${c}">${c}</option>`;
+                pCust.innerHTML += opt; dCust.innerHTML += opt;
+            });
+
+            updateProdJenis();
+            updateDelJenis();
+        }
+
+        function updateProdJenis() {
+            const cust = document.getElementById('prod-cust').value;
+            const jenisUnik = [...new Set(masterItems.filter(i => i.customer === cust).map(i => i.jenis_barang))];
+            const pJenis = document.getElementById('prod-jenis');
+            pJenis.innerHTML = '';
+            jenisUnik.forEach(j => pJenis.innerHTML += `<option value="${j}">${j}</option>`);
+            updateProdItem();
+        }
+
+        function updateProdItem() {
+            const cust = document.getElementById('prod-cust').value;
+            const jenis = document.getElementById('prod-jenis').value;
+            const items = masterItems.filter(i => i.customer === cust && i.jenis_barang === jenis);
+            const pItem = document.getElementById('prod-item');
+            pItem.innerHTML = '';
+            items.forEach(i => pItem.innerHTML += `<option value="${i.nama_item}">${i.nama_item}</option>`);
+        }
+
+        function updateDelJenis() {
+            const cust = document.getElementById('del-cust').value;
+            const jenisUnik = [...new Set(masterItems.filter(i => i.customer === cust).map(i => i.jenis_barang))];
+            const dJenis = document.getElementById('del-jenis');
+            dJenis.innerHTML = '';
+            jenisUnik.forEach(j => dJenis.innerHTML += `<option value="${j}">${j}</option>`);
+            updateDelItem();
+        }
+
+        function updateDelItem() {
+            const cust = document.getElementById('del-cust').value;
+            const jenis = document.getElementById('del-jenis').value;
+            const items = masterItems.filter(i => i.customer === cust && i.jenis_barang === jenis);
+            const dItem = document.getElementById('del-item');
+            dItem.innerHTML = '';
+            items.forEach(i => dItem.innerHTML += `<option value="${i.nama_item}">${i.nama_item}</option>`);
+        }
+
+        async function addMasterItem() {
+            const customer = document.getElementById('new-cust').value.trim();
+            const jenis_barang = document.getElementById('new-jenis').value.trim();
+            const nama_item = document.getElementById('new-item').value.trim();
+            if(!customer || !jenis_barang || !nama_item) return alert('Lengkapi semua kolom!');
+
             await fetch(`${API_URL}/api/master/item`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ customer: cust, nama_item: item })
+                body: JSON.stringify({ customer, jenis_barang, nama_item })
             });
             document.getElementById('new-cust').value = '';
+            document.getElementById('new-jenis').value = '';
             document.getElementById('new-item').value = '';
-            muatMasterData();
-            alert('Item baru berhasil ditambahkan!');
+            await muatMasterData();
+            alert('Item baru terdaftar!');
         }
 
         async function addMasterProses() {
-            const pros = document.getElementById('new-proses').value.trim();
-            if(!pros) return alert('Isi nama proses!');
-            
+            const nama_proses = document.getElementById('new-proses').value.trim();
+            if(!nama_proses) return alert('Isi nama proses!');
             await fetch(`${API_URL}/api/master/proses`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ nama_proses: pros })
+                body: JSON.stringify({ nama_proses })
             });
             document.getElementById('new-proses').value = '';
-            muatMasterData();
-            alert('Proses baru berhasil ditambahkan!');
+            await muatMasterData();
+            alert('Proses ditambahkan!');
         }
 
         async function muatTabelWIP() {
-            try {
-                const r = await fetch(`${API_URL}/api/wip`);
-                const data = await r.json();
-                const tbody = document.getElementById('tabelWIP');
-                tbody.innerHTML = '';
-                if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500 font-semibold bg-green-50 text-green-700">✅ Semua Proses Clear! Tidak ada antrean WIP.</td></tr>`;
-                    return;
-                }
-                data.forEach(w => {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50 border-b">
-                            <td class="p-3 font-semibold text-gray-700">${w.customer}</td>
-                            <td class="p-3 italic text-gray-600">${w.nama_item}</td>
-                            <td class="p-3"><span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded border border-amber-200">${w.proses_sekarang}</span></td>
-                            <td class="p-3 font-bold text-red-600">${w.sisa_wip.toLocaleString()} pcs</td>
-                        </tr>`;
-                });
-            } catch(e) { console.error(e); }
+            const r = await fetch(`${API_URL}/api/wip`);
+            const data = await r.json();
+            const tbody = document.getElementById('tabelWIP');
+            tbody.innerHTML = '';
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-green-700 font-semibold bg-green-50">✅ Semua Proses Clear!</td></tr>`;
+                return;
+            }
+            data.forEach(w => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="p-3 font-semibold text-gray-700">${w.customer}</td>
+                        <td class="p-3 text-gray-600">${w.jenis_barang}</td>
+                        <td class="p-3 italic text-gray-600">${w.nama_item}</td>
+                        <td class="p-3"><span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">${w.proses_sekarang}</span></td>
+                        <td class="p-3 font-bold text-red-600">${w.sisa_wip.toLocaleString()} pcs</td>
+                    </tr>`;
+            });
         }
 
         async function kirimHasilKerja() {
-            const item = document.getElementById('itemKerja').value;
-            const proses = document.getElementById('prosesKerja').value;
-            const ok = parseInt(document.getElementById('jmlOK').value) || 0;
-            const ng = parseInt(document.getElementById('jmlNG').value) || 0;
-
-            if(!item || !proses || (ok===0 && ng===0)) return alert('Pilih data dan isi jumlah produksi!');
+            const customer = document.getElementById('prod-cust').value;
+            const jenis_barang = document.getElementById('prod-jenis').value;
+            const nama_item = document.getElementById('prod-item').value;
+            const proses_sekarang = document.getElementById('prod-proses').value;
+            const jumlah_ok = parseInt(document.getElementById('jmlOK').value) || 0;
+            const jumlah_ng = parseInt(document.getElementById('jmlNG').value) || 0;
 
             await fetch(`${API_URL}/api/produksi`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ nama_item: item, proses_sekarang: proses, jumlah_ok: ok, jumlah_ng: ng })
+                body: JSON.stringify({ customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng })
             });
             document.getElementById('jmlOK').value = '';
             document.getElementById('jmlNG').value = '';
             muatTabelWIP();
-            alert('Data kerja berhasil disimpan!');
+            alert('Data kerja disimpan!');
         }
 
         async function kirimDelivery() {
-            const item = document.getElementById('itemDeliv').value;
-            const sj = document.getElementById('noSJ').value.trim();
-            const jml = parseInt(document.getElementById('jmlDeliv').value) || 0;
-
-            if(!item || !sj || jml === 0) return alert('Mohon lengkapi data surat jalan dan jumlah kirim!');
+            const customer = document.getElementById('del-cust').value;
+            const jenis_barang = document.getElementById('del-jenis').value;
+            const nama_item = document.getElementById('del-item').value;
+            const no_surat_jalan = document.getElementById('noSJ').value.trim();
+            const jumlah_kirim = parseInt(document.getElementById('jmlDeliv').value) || 0;
 
             await fetch(`${API_URL}/api/delivery`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ nama_item: item, no_surat_jalan: sj, jumlah_kirim: jml })
+                body: JSON.stringify({ customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim })
             });
             document.getElementById('noSJ').value = '';
             document.getElementById('jmlDeliv').value = '';
             muatTabelWIP();
-            alert('Data pengiriman tercatat!');
-        }
-
-        function downloadExcel() {
-            window.open(`${API_URL}/api/export-excel`, '_blank');
+            alert('Pengiriman dicatat!');
         }
 
         window.onload = bootApp;
