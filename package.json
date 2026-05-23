@@ -1,15 +1,15 @@
 {
-  "name": "wip-delivery-app",
+  "name": "aplikasi-produksi",
   "version": "1.0.0",
+  "description": "Sistem Monitoring WIP Produksi Pabrik",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "exceljs": "^4.4.0",
+    "cors": "^2.8.5",
+    "excel4node": "^1.8.2",
     "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7"
   }
 }
