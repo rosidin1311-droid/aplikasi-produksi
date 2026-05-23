@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistem Dashboard Produksi & WIP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto">
+
+        <div id="login-box" class="bg-white p-8 rounded-lg shadow-md max-w-sm mx-auto my-20">
+            <h2 class="text-xl font-bold mb-4 text-center">🔑 Login Sistem Produksi</h2>
+            <input type="text" id="username" placeholder="User" class="w-full p-2 border mb-3 rounded" value="admin">
+            <input type="password" id="password" placeholder="Password" class="w-full p-2 border mb-4 rounded" value="admin123">
+            <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700">Masuk</button>
+        </div>
+
+        <div id="main-app" class="hidden space-y-6">
+            
+            <div class="bg-gray-800 text-white p-4 rounded-lg flex justify-between items-center shadow">
+                <div>
+                    <h1 class="text-xl font-bold">🏭 Sistem Kontrol Alur Produksi & WIP</h1>
+                    <p class="text-xs text-gray-300">Akses Terotorisasi: <span id="user-display" class="font-bold"></span></p>
+                </div>
+                <button onclick="logout()" class="bg-red-500 px-3 py-1 text-sm rounded hover:bg-red-600">Keluar</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-700">📝 Input Hasil Kerja Harian</h3>
+                        <span id="status-save" class="text-xs text-gray-400 italic">Draft Lokal</span>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="block text-sm">Pilih Item Kerja:</label>
+                        <select id="prod-item" class="w-full p-2 border rounded">
+                            <option value="1">Box Oreo isi 6 (Model: Gift Box)</option>
+                        </select>
+                        
+                        <label class="block text-sm">Pilih Proses:</label>
+                        <select id="prod-proses" class="w-full p-2 border rounded">
+                            <option value="4">Diecut</option>
+                            <option value="5">Kopek</option>
+                            <option value="6">Longway</option>
+                            <option value="7">Coblos</option>
+                            <option value="8">Lem Semi</option>
+                            <option value="3">Cek Point</option>
+                        </select>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-green-600">Jumlah OK:</label>
+                                <input type="number" id="prod-ok" oninput="saveDraft()" class="w-full p-2 border rounded border-green-300">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-red-600">Jumlah NG:</label>
+                                <input type="number" id="prod-ng" oninput="saveDraft()" class="w-full p-2 border rounded border-red-300">
+                            </div>
+                        </div>
+                        <button onclick="submitProduksi()" class="w-full bg-green-600 text-white p-2 mt-2 rounded font-bold hover:bg-green-700">Kirim & Perbarui Stok</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">🚚 Pengiriman Barang Jadi (Delivery)</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm">Item dikirim:</label>
+                        <select id="del-item" class="w-full p-2 border rounded">
+                            <option value="1">Box Oreo isi 6</option>
+                        </select>
+                        <label class="block text-sm">No. Surat Jalan:</label>
+                        <input type="text" id="del-sj" placeholder="Contoh: SJ-001" class="w-full p-2 border rounded">
+                        <label class="block text-sm">Jumlah Kirim (Pcs):</label>
+                        <input type="number" id="del-qty" class="w-full p-2 border rounded">
+                        <button onclick="submitDelivery()" class="w-full bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700">Catat Pengiriman</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-700">📊 Pantauan Sisa WIP Aktif</h3>
+                        <p class="text-xs text-gray-400">Proses yang sisa antreannya 0 otomatis disembunyikan</p>
+                    </div>
+                    <a href="/api/export-wip" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-1 hover:bg-emerald-700">
+                        📥 Lampirkan ke PPIC (Excel)
+                    </a>
+                </div>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-sm">
+                            <th class="p-3 border">Customer</th>
+                            <th class="p-3 border">Nama Item (Model)</th>
+                            <th class="p-3 border">Proses Macet</th>
+                            <th class="p-3 border text-center">Sisa Antrean (WIP)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wip-table">
+                        </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 🔐 FUNGSI LOGIN & SECURITY
+        function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            fetch('/api/login', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username:u, password:p})
+            }).then(res => res.json()).then(data => {
+                if(data.token) {
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('login-box').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    document.getElementById('user-display').innerText = u.toUpperCase();
+                    loadWip();
+                    loadDraft();
+                } else { alert(data.message); }
+            });
+        }
+        function logout() { localStorage.clear(); location.reload(); }
+
+        // 💾 FUNGSI AUTO-SAVE (LOKAL MEMORY BROWSER)
+        function saveDraft() {
+            localStorage.setItem('draft_ok', document.getElementById('prod-ok').value);
+            localStorage.setItem('draft_ng', document.getElementById('prod-ng').value);
+            document.getElementById('status-save').innerText = "Draft Tersimpan di HP";
+        }
+        function loadDraft() {
+            if(localStorage.getItem('draft_ok')) document.getElementById('prod-ok').value = localStorage.getItem('draft_ok');
+            if(localStorage.getItem('draft_ng')) document.getElementById('prod-ng').value = localStorage.getItem('draft_ng');
+        }
+
+        // 📊 RELOAD DATA TAB PANTUAN WIP (>0)
+        function loadWip() {
+            fetch('/api/wip').then(res => res.json()).then(data => {
+                const tbody = document.getElementById('wip-table');
+                tbody.innerHTML = data.length === 0 ? `<tr><td colspan="4" class="text-center p-4 text-gray-400">Semua proses bersih (0 WIP)</td></tr>` : '';
+                data.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr class="border-b ${row.sisa_wip > 100 ? 'bg-red-50 text-red-700' : ''}">
+                            <td class="p-3 border">${row.nama_customer}</td>
+                            <td class="p-3 border font-medium">${row.nama_item} <span class="text-xs text-gray-400">(${row.nama_model})</span></td>
+                            <td class="p-3 border font-semibold">${row.proses_saat_ini}</td>
+                            <td class="p-3 border text-center font-bold text-lg">${row.sisa_wip} pcs</td>
+                        </tr>`;
+                });
+            });
+        }
+
+        // 🚀 TRANSMIT DATA KE SERVER KONEKSI
+        function submitProduksi() {
+            const body = {
+                item_id: document.getElementById('prod-item').value,
+                process_id: document.getElementById('prod-proses').value,
+                jumlah_ok: parseInt(document.getElementById('prod-ok').value) || 0,
+                jumlah_ng: parseInt(document.getElementById('prod-ng').value) || 0
+            };
+            fetch('/api/produksi', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+            }).then(res => res.json()).then(data => {
+                document.getElementById('status-save').innerText = data.message;
+                localStorage.removeItem('draft_ok'); localStorage.removeItem('draft_ng');
+                document.getElementById('prod-ok').value = ''; document.getElementById('prod-ng').value = '';
+                loadWip();
+            });
+        }
+
+        function submitDelivery() {
+            const body = {
+                item_id: document.getElementById('del-item').value,
+                no_surat_jalan: document.getElementById('del-sj').value,
+                jumlah_kirim: parseInt(document.getElementById('del-qty').value) || 0
+            };
+            fetch('/api/delivery', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
+            .then(res => res.json()).then(data => { alert(data.message); loadWip(); });
+        }
+    </script>
+</body>
+</html>
