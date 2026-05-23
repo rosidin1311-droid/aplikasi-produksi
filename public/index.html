@@ -39,8 +39,11 @@
                         <button onclick="addMasterItem()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Daftarkan Item</button>
                     </div>
                     <div class="bg-white p-4 rounded shadow space-y-2">
-                        <h4 class="font-bold text-sm text-gray-600">Tambah Tahapan Proses Baru:</h4>
-                        <input type="text" id="new-proses" placeholder="Nama Proses (Contoh: Packing)" class="w-full p-2 border rounded text-sm">
+                        <h4 class="font-bold text-sm text-gray-600">Tambah Tahapan Proses Berdasarkan Jenis:</h4>
+                        <select id="new-proses-jenis" class="w-full p-2 border rounded text-sm bg-gray-50">
+                            <option value="">-- Pilih Jenis Barang Dahulu --</option>
+                        </select>
+                        <input type="text" id="new-proses" placeholder="Nama Proses (Contoh: Diecut)" class="w-full p-2 border rounded text-sm">
                         <button onclick="addMasterProses()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Tambah Proses</button>
                     </div>
                 </div>
@@ -59,7 +62,7 @@
                     <label class="block text-xs font-bold text-gray-500">3. PILIH NAMA ITEM</label>
                     <select id="prod-item" class="w-full p-2 border rounded bg-gray-50"></select>
 
-                    <label class="block text-xs font-bold text-gray-500">4. PILIH PROSES KERJA</label>
+                    <label class="block text-xs font-bold text-gray-500">4. PILIH PROSES KERJA (Tersaring Otomatis)</label>
                     <select id="prod-proses" class="w-full p-2 border rounded bg-gray-50"></select>
 
                     <div class="grid grid-cols-2 gap-3 pt-2">
@@ -124,6 +127,7 @@
     <script>
         const API_URL = window.location.origin;
         let masterItems = [];
+        let masterProses = [];
 
         function login() {
             if(document.getElementById('username').value === 'admin' && document.getElementById('password').value === 'admin123') {
@@ -150,10 +154,13 @@
                 const r = await fetch(`${API_URL}/api/master`);
                 const d = await r.json();
                 masterItems = d.items;
+                masterProses = d.proses;
 
-                const pSel = document.getElementById('prod-proses');
-                pSel.innerHTML = '';
-                d.proses.forEach(p => pSel.innerHTML += `<option value="${p.nama_proses}">${p.nama_proses}</option>`);
+                // Update pilihan jenis barang di menu master tambah proses
+                const jSelMaster = document.getElementById('new-proses-jenis');
+                jSelMaster.innerHTML = '<option value="">-- Pilih Jenis Barang --</option>';
+                const semuaJenis = [...new Set(masterItems.map(i => i.jenis_barang))];
+                semuaJenis.forEach(j => jSelMaster.innerHTML += `<option value="${j}">${j}</option>`);
 
                 renderCustomerDropdowns();
             } catch (e) { console.error(e); }
@@ -161,7 +168,6 @@
 
         function renderCustomerDropdowns() {
             const pelangganUnik = [...new Set(masterItems.map(i => i.customer))];
-            
             const pCust = document.getElementById('prod-cust');
             const dCust = document.getElementById('del-cust');
             pCust.innerHTML = ''; dCust.innerHTML = '';
@@ -189,10 +195,25 @@
             const cust = document.getElementById('prod-cust').value;
             const jenis = document.getElementById('prod-jenis').value;
             if(!cust || !jenis) return;
+            
             const items = masterItems.filter(i => i.customer === cust && i.jenis_barang === jenis);
             const pItem = document.getElementById('prod-item');
             pItem.innerHTML = '';
             items.forEach(i => pItem.innerHTML += `<option value="${i.nama_item}">${i.nama_item}</option>`);
+            
+            // FILTER PROSES KERJA OTOMATIS BERDASARKAN JENIS BARANG
+            filterProsesKerja(jenis);
+        }
+
+        function filterProsesKerja(jenisBarang) {
+            const pSel = document.getElementById('prod-proses');
+            pSel.innerHTML = '';
+            const prosesTersaring = masterProses.filter(p => p.jenis_barang === jenisBarang);
+            if(prosesTersaring.length === 0) {
+                pSel.innerHTML = '<option value="">-- Belum ada daftar proses --</option>';
+                return;
+            }
+            prosesTersaring.forEach(p => pSel.innerHTML += `<option value="${p.nama_proses}">${p.nama_proses}</option>`);
         }
 
         function updateDelJenis() {
@@ -234,16 +255,18 @@
         }
 
         async function addMasterProses() {
+            const jenis_barang = document.getElementById('new-proses-jenis').value;
             const nama_proses = document.getElementById('new-proses').value.trim();
-            if(!nama_proses) return alert('Isi nama proses!');
+            if(!jenis_barang || !nama_proses) return alert('Pilih jenis barang dan isi nama proses!');
+            
             await fetch(`${API_URL}/api/master/proses`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ nama_proses })
+                body: JSON.stringify({ jenis_barang, nama_proses })
             });
             document.getElementById('new-proses').value = '';
             await muatMasterData();
-            alert('Proses ditambahkan!');
+            alert('Proses ditambahkan khusus untuk jenis barang ini!');
         }
 
         async function muatTabelWIP() {
@@ -274,6 +297,8 @@
             const proses_sekarang = document.getElementById('prod-proses').value;
             const jumlah_ok = parseInt(document.getElementById('jmlOK').value) || 0;
             const jumlah_ng = parseInt(document.getElementById('jmlNG').value) || 0;
+
+            if(!proses_sekarang) return alert('Proses belum dipilih/tidak tersedia!');
 
             await fetch(`${API_URL}/api/produksi`, {
                 method: 'POST',
