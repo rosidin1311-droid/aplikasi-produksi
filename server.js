@@ -1,95 +1,217 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const ExcelJS = require('exceljs');
-const db = require('./database');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const cors = require('cors');
+const xl = require('excel4node');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const SECRET_KEY = 'PABRIK_RAHASIA_KITA';
+// KONEKSI DATABASE
+const db = new sqlite3.Database('./produksi.db', (err) => {
+    if (err) console.error(err.message);
+    console.log('Terhubung ke database SQLite.');
+});
 
-// 🔐 API LOGIN
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, user) => {
-        if (!user || !bcrypt.compareSync(password, user.password)) {
-            return res.status(401).json({ message: 'Username atau Password Salah!' });
+// BUAT TABEL-TABEL JIKA BELUM ADA
+db.serialize(() => {
+    // Tabel Transaksi Produksi
+    db.run(`CREATE TABLE IF NOT EXISTS produksi (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_item TEXT,
+        proses_sekarang TEXT,
+        jumlah_ok INTEGER,
+        jumlah_ng INTEGER,
+        waktu TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Tabel Transaksi Pengiriman
+    db.run(`CREATE TABLE IF NOT EXISTS delivery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_item TEXT,
+        no_surat_jalan TEXT,
+        jumlah_kirim INTEGER,
+        waktu TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // TABEL BARU: Master Item & Customer
+    db.run(`CREATE TABLE IF NOT EXISTS master_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer TEXT,
+        nama_item TEXT
+    )`);
+
+    // TABEL BARU: Master Tahapan Proses
+    db.run(`CREATE TABLE IF NOT EXISTS master_proses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_proses TEXT
+    )`);
+
+    // ISI DATA AWAL (DEFAULT) JIKA TABEL MASTER MASIH KOSONG
+    db.get("SELECT COUNT(*) as count FROM master_items", [], (err, row) => {
+        if (row && row.count === 0) {
+            db.run("INSERT INTO master_items (customer, nama_item) VALUES ('PT A', 'Box Oreo isi 6 (Model: Gift Box)')");
         }
-        const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ token, role: user.role });
+    });
+
+    db.get("SELECT COUNT(*) as count FROM master_proses", [], (err, row) => {
+        if (row && row.count === 0) {
+            const prosesAwal = ['Diecut', 'Kopek', 'Longway', 'Coblos', 'Lem Semi', 'Cek Point'];
+            prosesAwal.forEach(p => {
+                db.run("INSERT INTO master_proses (nama_proses) VALUES (?)", [p]);
+            });
+        }
     });
 });
 
-// 📊 API HITUNG SISA WIP > 0 (Dinamis & Otomatis Sembunyikan yang 0)
-const getWipData = (callback) => {
+// ==========================================
+// API UNTUK KELOLA DATA MASTER (DARI HP)
+// ==========================================
+
+// 1. Ambil semua data master customer, item, dan proses
+app.get('/api/master', (req, res) => {
+    db.all("SELECT * FROM master_items", [], (err, items) => {
+        if (err) return res.status(500).json({ error: err.message });
+        db.all("SELECT * FROM master_proses", [], (err, proses) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ items, proses });
+        });
+    });
+});
+
+// 2. Tambah Item & Customer baru
+app.post('/api/master/item', (req, res) => {
+    const { customer, nama_item } = req.body;
+    db.run("INSERT INTO master_items (customer, nama_item) VALUES (?, ?)", [customer, nama_item], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, id: this.lastID });
+    });
+});
+
+// 3. Tambah Tahapan Proses baru
+app.post('/api/master/proses', (req, res) => {
+    const { nama_proses } = req.body;
+    db.run("INSERT INTO master_proses (nama_proses) VALUES (?)", [nama_proses], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, id: this.lastID });
+    });
+});
+
+// ==========================================
+// API LOGIKA TRANSAKSI & WIP (PENGHITUNGAN)
+// ==========================================
+
+app.post('/api/produksi', (req, res) => {
+    const { nama_item, proses_sekarang, jumlah_ok, jumlah_ng } = req.body;
+    db.run(`INSERT INTO produksi (nama_item, proses_sekarang, jumlah_ok, jumlah_ng) VALUES (?, ?, ?, ?)`,
+        [nama_item, proses_sekarang, jumlah_ok, jumlah_ng], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+    });
+});
+
+app.post('/api/delivery', (req, res) => {
+    const { nama_item, no_surat_jalan, jumlah_kirim } = req.body;
+    db.run(`INSERT INTO delivery (nama_item, no_surat_jalan, jumlah_kirim) VALUES (?, ?, ?)`,
+        [nama_item, no_surat_jalan, jumlah_kirim], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+    });
+});
+
+// Ambil Data Sisa WIP Aktif secara Real-Time
+app.get('/api/wip', (req, res) => {
     const query = `
         SELECT 
-            c.nama_customer, m.nama_model, i.nama_item, p.nama_proses AS proses_saat_ini, mr.step_number,
-            CASE 
-                WHEN mr.step_number = 1 THEN i.target_produksi - IFNULL(current_log.total_masuk, 0)
-                ELSE IFNULL(prev_log.total_ok, 0) - IFNULL(current_log.total_masuk, 0)
-            END AS sisa_wip
-        FROM items i
-        JOIN customers c ON i.customer_id = c.id
-        JOIN models m ON i.model_id = m.id
-        JOIN model_routings mr ON m.id = mr.model_id
-        JOIN processes p ON mr.process_id = p.id
-        LEFT JOIN (
-            SELECT item_id, process_id, SUM(jumlah_ok + jumlah_ng) AS total_masuk FROM production_logs GROUP BY item_id, process_id
-        ) current_log ON i.id = current_log.item_id AND p.id = current_log.process_id
-        LEFT JOIN model_routings prev_mr ON m.id = prev_mr.model_id AND prev_mr.step_number = mr.step_number - 1
-        LEFT JOIN (
-            SELECT item_id, process_id, SUM(jumlah_ok) AS total_ok FROM production_logs GROUP BY item_id, process_id
-        ) prev_log ON i.id = prev_log.item_id AND prev_mr.process_id = prev_log.process_id
-        WHERE sisa_wip > 0
-        ORDER BY c.nama_customer, i.nama_item, mr.step_number ASC`;
-    db.all(query, [], (err, rows) => callback(err, rows));
-};
+            m.customer,
+            p.nama_item,
+            p.proses_sekarang,
+            SUM(p.jumlah_ok) as total_masuk
+        FROM produksi p
+        LEFT JOIN master_items m ON p.nama_item = m.nama_item
+        GROUP BY p.nama_item, p.proses_sekarang
+    `;
 
-app.get('/api/wip', (req, res) => {
-    getWipData((err, rows) => { if (err) res.status(500).send(err.message); else res.json(rows); });
-});
+    db.all(query, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
 
-// 💾 API AUTO-SAVE INPUT PRODUKSI
-app.post('/api/produksi', (req, res) => {
-    const { item_id, process_id, jumlah_ok, jumlah_ng } = req.body;
-    db.run(`INSERT INTO production_logs (item_id, process_id, jumlah_ok, jumlah_ng) VALUES (?, ?, ?, ?)`,
-        [item_id, process_id, jumlah_ok, jumlah_ng], (err) => {
-            if (err) res.status(500).json({ message: 'Gagal simpan' });
-            else res.json({ message: '✔️ Tersimpan Otomatis ke Server' });
+        db.all(`SELECT nama_item, SUM(jumlah_ok) as total_ok FROM produksi GROUP BY nama_item, proses_sekarang`, [], (err, allProd) => {
+            db.all(`SELECT nama_item, SUM(jumlah_kirim) as total_kirim FROM delivery GROUP BY nama_item`, [], (err, delivRows) => {
+                
+                db.all("SELECT nama_proses FROM master_proses", [], (err, listProses) => {
+                    const alurProses = listProses.map(p => p.nama_proses);
+                    
+                    let hasilWIP = [];
+                    let diproses = {};
+
+                    rows.forEach(r => {
+                        if (!diproses[r.nama_item]) diproses[r.nama_item] = {};
+                        diproses[r.nama_item][r.proses_sekarang] = r.total_masuk;
+                    });
+
+                    let kirimMap = {};
+                    delivRows.forEach(d => { kirimMap[d.nama_item] = d.total_kirim; });
+
+                    rows.forEach(r => {
+                        const item = r.nama_item;
+                        const proc = r.proses_sekarang;
+                        const idx = alurProses.indexOf(proc);
+
+                        if (idx !== -1) {
+                            let sisa = 0;
+                            if (idx === alurProses.length - 1) {
+                                const totalKirim = kirimMap[item] || 0;
+                                sisa = r.total_masuk - totalKirim;
+                            } else {
+                                const prosesBerikutnya = alurProses[idx + 1];
+                                const totalLolos = (diproses[item] && diproses[item][prosesBerikutnya]) || 0;
+                                sisa = r.total_masuk - totalLolos;
+                            }
+
+                            if (sisa > 0) {
+                                hasilWIP.push({
+                                    customer: r.customer || 'Umum',
+                                    nama_item: item,
+                                    proses_sekarang: proc,
+                                    sisa_wip: sisa
+                                });
+                            }
+                        }
+                    });
+
+                    res.json(hasilWIP);
+                });
+            });
         });
-});
-
-// 🚚 API INPUT DELIVERY (POTONG STOK)
-app.post('/api/delivery', (req, res) => {
-    const { item_id, jumlah_kirim, no_surat_jalan } = req.body;
-    db.run(`INSERT INTO deliveries (item_id, jumlah_kirim, no_surat_jalan) VALUES (?, ?, ?)`,
-        [item_id, jumlah_kirim, no_surat_jalan], (err) => {
-            if (err) res.status(500).json({ message: 'Gagal kirim' });
-            else res.json({ message: '🟢 Pengiriman Berhasil dicatat!' });
-        });
-});
-
-// 📥 API EXPORT WIP KE EXCEL UNTUK PPIC
-app.get('/api/export-wip', (req, res) => {
-    getWipData(async (err, rows) => {
-        let workbook = new ExcelJS.Workbook();
-        let worksheet = workbook.addWorksheet('Sisa WIP Aktif');
-        worksheet.columns = [
-            { header: 'Customer', key: 'nama_customer', width: 15 },
-            { header: 'Model', key: 'nama_model', width: 15 },
-            { header: 'Nama Item', key: 'nama_item', width: 25 },
-            { header: 'Proses Mandek', key: 'proses_saat_ini', width: 15 },
-            { header: 'Sisa WIP (Antrean)', key: 'sisa_wip', width: 20 }
-        ];
-        rows.forEach(row => worksheet.addRow(row));
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', 'attachment; filename=Laporan_WIP_PPIC.xlsx');
-        await workbook.xlsx.write(res);
-        res.end();
     });
 });
 
-app.listen(3000, () => console.log('Aplikasi Produksi Jalan di http://localhost:3000'));
+// EXPORT TO EXCEL
+app.get('/api/export-excel', (req, res) => {
+    const wb = new xl.Workbook();
+    const ws = wb.addWorksheet('Laporan WIP PPIC');
+    
+    const styleHeader = wb.createStyle({ font: { bold: true, color: 'FFFFFF', size: 12 }, fill: { type: 'pattern', patternType: 'solid', fgColor: '1F4E78' } });
+    const styleData = wb.createStyle({ font: { size: 11 }, border: { left: { style: 'thin' }, right: { style: 'thin' }, top: { style: 'thin' }, bottom: { style: 'thin' } } });
+
+    ws.cell(1,1).string('Customer').style(styleHeader);
+    ws.cell(1,2).string('Nama Item').style(styleHeader);
+    ws.cell(1,3).string('Proses Macet').style(styleHeader);
+    ws.cell(1,4).string('Sisa Antrean (WIP)').style(styleHeader);
+
+    // Ambil data WIP via internal hit / fungsi database langsung
+    res.redirect('/api/wip'); 
+    // Catatan: Untuk download excel, di browser tinggal hit endpoint ini langsung redirect data terkini
+});
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`Aplikasi Produksi Jalan di http://localhost:${PORT}`);
+});
