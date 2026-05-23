@@ -10,15 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// KONEKSI DATABASE
 const db = new sqlite3.Database('./produksi.db', (err) => {
     if (err) console.error(err.message);
     console.log('Terhubung ke database SQLite.');
 });
 
-// BUAT TABEL-TABEL BARU (STRUKTUR 3 TINGKAT)
 db.serialize(() => {
-    // Tabel Transaksi Produksi Harian
     db.run(`CREATE TABLE IF NOT EXISTS produksi (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT,
@@ -30,7 +27,6 @@ db.serialize(() => {
         waktu TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Tabel Transaksi Pengiriman (Delivery)
     db.run(`CREATE TABLE IF NOT EXISTS delivery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT,
@@ -41,7 +37,6 @@ db.serialize(() => {
         waktu TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // TABEL MASTER DATA (CUSTOMER, JENIS, ITEM)
     db.run(`CREATE TABLE IF NOT EXISTS master_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT,
@@ -49,13 +44,13 @@ db.serialize(() => {
         nama_item TEXT
     )`);
 
-    // TABEL MASTER DATA PROSES
+    // PERBAIKAN: Tabel proses sekarang merekam untuk jenis_barang apa
     db.run(`CREATE TABLE IF NOT EXISTS master_proses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        jenis_barang TEXT,
         nama_proses TEXT
     )`);
 
-    // Isi data awal otomatis jika database baru masih kosong (buat testing)
     db.get("SELECT COUNT(*) as count FROM master_items", [], (err, row) => {
         if (row && row.count === 0) {
             db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES ('PT A', 'Gift Box', 'Box Oreo isi 6')");
@@ -66,17 +61,12 @@ db.serialize(() => {
         if (row && row.count === 0) {
             const prosesAwal = ['Diecut', 'Kopek', 'Longway', 'Coblos', 'Lem Semi', 'Cek Point'];
             prosesAwal.forEach(p => {
-                db.run("INSERT INTO master_proses (nama_proses) VALUES (?)", [p]);
+                db.run("INSERT INTO master_proses (jenis_barang, nama_proses) VALUES ('Gift Box', ?)", [p]);
             });
         }
     });
 });
 
-// ==========================================
-// API UNTUK MEMBACA & MENAMBAH MASTER DATA
-// ==========================================
-
-// 1. Ambil semua list master data
 app.get('/api/master', (req, res) => {
     db.all("SELECT * FROM master_items", [], (err, items) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -87,7 +77,6 @@ app.get('/api/master', (req, res) => {
     });
 });
 
-// 2. Tambah data kombinasi Customer + Jenis + Item baru
 app.post('/api/master/item', (req, res) => {
     const { customer, jenis_barang, nama_item } = req.body;
     db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES (?, ?, ?)", 
@@ -97,18 +86,14 @@ app.post('/api/master/item', (req, res) => {
     });
 });
 
-// 3. Tambah nama Proses baru
+// PERBAIKAN: Simpan proses berdasarkan jenis barangnya
 app.post('/api/master/proses', (req, res) => {
-    const { nama_proses } = req.body;
-    db.run("INSERT INTO master_proses (nama_proses) VALUES (?)", [nama_proses], function(err) {
+    const { jenis_barang, nama_proses } = req.body;
+    db.run("INSERT INTO master_proses (jenis_barang, nama_proses) VALUES (?, ?)", [jenis_barang, nama_proses], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
 });
-
-// ==========================================
-// API TRANSAKSI PRODUKSI & PENGHITUNGAN WIP
-// ==========================================
 
 app.post('/api/produksi', (req, res) => {
     const { customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng } = req.body;
@@ -128,23 +113,18 @@ app.post('/api/delivery', (req, res) => {
     });
 });
 
-// Menghitung sisa WIP berdasarkan kombinasi unik 3 tingkat
 app.get('/api/wip', (req, res) => {
     const query = `
-        SELECT 
-            customer, jenis_barang, nama_item, proses_sekarang,
-            SUM(jumlah_ok) as total_masuk
-        FROM produksi
-        GROUP BY customer, jenis_barang, nama_item, proses_sekarang
+        SELECT customer, jenis_barang, nama_item, proses_sekarang, SUM(jumlah_ok) as total_masuk
+        FROM produksi GROUP BY customer, jenis_barang, nama_item, proses_sekarang
     `;
     db.all(query, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         db.all(`SELECT customer, jenis_barang, nama_item, SUM(jumlah_kirim) as total_kirim FROM delivery GROUP BY customer, jenis_barang, nama_item`, [], (err, delivRows) => {
-            db.all("SELECT nama_proses FROM master_proses", [], (err, listProses) => {
-                const alurProses = listProses.map(p => p.nama_proses);
+            db.all("SELECT jenis_barang, nama_proses FROM master_proses", [], (err, listProses) => {
+                
                 let hasilWIP = [];
                 let diproses = {};
-
                 rows.forEach(r => {
                     const key = `${r.customer}|${r.jenis_barang}|${r.nama_item}`;
                     if (!diproses[key]) diproses[key] = {};
@@ -158,6 +138,8 @@ app.get('/api/wip', (req, res) => {
 
                 rows.forEach(r => {
                     const key = `${r.customer}|${r.jenis_barang}|${r.nama_item}`;
+                    // Ambil alur proses khusus untuk jenis barang ini saja
+                    const alurProses = listProses.filter(p => p.jenis_barang === r.jenis_barang).map(p => p.nama_proses);
                     const idx = alurProses.indexOf(r.proses_sekarang);
 
                     if (idx !== -1) {
@@ -188,14 +170,7 @@ app.get('/api/wip', (req, res) => {
     });
 });
 
-app.get('/api/export-excel', (req, res) => {
-    res.redirect('/api/wip');
-});
+app.get('/api/export-excel', (req, res) => { res.redirect('/api/wip'); });
+app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(PORT, () => {
-    console.log(`Server berjalan lancar di port ${PORT}`);
-});
+app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
