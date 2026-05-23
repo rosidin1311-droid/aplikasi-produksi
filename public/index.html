@@ -151,12 +151,10 @@
                 const d = await r.json();
                 masterItems = d.items;
 
-                // Isi Dropdown Proses Kerja
                 const pSel = document.getElementById('prod-proses');
                 pSel.innerHTML = '';
                 d.proses.forEach(p => pSel.innerHTML += `<option value="${p.nama_proses}">${p.nama_proses}</option>`);
 
-                // Setup Dropdown Bertingkat (Customer)
                 renderCustomerDropdowns();
             } catch (e) { console.error(e); }
         }
@@ -179,6 +177,7 @@
 
         function updateProdJenis() {
             const cust = document.getElementById('prod-cust').value;
+            if(!cust) return;
             const jenisUnik = [...new Set(masterItems.filter(i => i.customer === cust).map(i => i.jenis_barang))];
             const pJenis = document.getElementById('prod-jenis');
             pJenis.innerHTML = '';
@@ -189,6 +188,7 @@
         function updateProdItem() {
             const cust = document.getElementById('prod-cust').value;
             const jenis = document.getElementById('prod-jenis').value;
+            if(!cust || !jenis) return;
             const items = masterItems.filter(i => i.customer === cust && i.jenis_barang === jenis);
             const pItem = document.getElementById('prod-item');
             pItem.innerHTML = '';
@@ -197,6 +197,7 @@
 
         function updateDelJenis() {
             const cust = document.getElementById('del-cust').value;
+            if(!cust) return;
             const jenisUnik = [...new Set(masterItems.filter(i => i.customer === cust).map(i => i.jenis_barang))];
             const dJenis = document.getElementById('del-jenis');
             dJenis.innerHTML = '';
@@ -207,6 +208,7 @@
         function updateDelItem() {
             const cust = document.getElementById('del-cust').value;
             const jenis = document.getElementById('del-jenis').value;
+            if(!cust || !jenis) return;
             const items = masterItems.filter(i => i.customer === cust && i.jenis_barang === jenis);
             const dItem = document.getElementById('del-item');
             dItem.innerHTML = '';
