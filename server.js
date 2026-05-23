@@ -2,7 +2,6 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const cors = require('cors');
-const xl = require('excel4node');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,9 +16,9 @@ const db = new sqlite3.Database('./produksi.db', (err) => {
     console.log('Terhubung ke database SQLite.');
 });
 
-// BUAT TABEL-TABEL BARU (LEBIH DETIL)
+// BUAT TABEL-TABEL BARU (STRUKTUR 3 TINGKAT)
 db.serialize(() => {
-    // Tabel Transaksi Produksi
+    // Tabel Transaksi Produksi Harian
     db.run(`CREATE TABLE IF NOT EXISTS produksi (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT,
@@ -31,7 +30,7 @@ db.serialize(() => {
         waktu TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Tabel Transaksi Pengiriman
+    // Tabel Transaksi Pengiriman (Delivery)
     db.run(`CREATE TABLE IF NOT EXISTS delivery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT,
@@ -42,7 +41,7 @@ db.serialize(() => {
         waktu TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // TABEL MASTER DATA (TERPISAH KATEGORI)
+    // TABEL MASTER DATA (CUSTOMER, JENIS, ITEM)
     db.run(`CREATE TABLE IF NOT EXISTS master_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT,
@@ -50,12 +49,13 @@ db.serialize(() => {
         nama_item TEXT
     )`);
 
+    // TABEL MASTER DATA PROSES
     db.run(`CREATE TABLE IF NOT EXISTS master_proses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nama_proses TEXT
     )`);
 
-    // Data awal untuk simulasi testing awal
+    // Isi data awal otomatis jika database baru masih kosong (buat testing)
     db.get("SELECT COUNT(*) as count FROM master_items", [], (err, row) => {
         if (row && row.count === 0) {
             db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES ('PT A', 'Gift Box', 'Box Oreo isi 6')");
@@ -73,8 +73,10 @@ db.serialize(() => {
 });
 
 // ==========================================
-// API MASTER DATA
+// API UNTUK MEMBACA & MENAMBAH MASTER DATA
 // ==========================================
+
+// 1. Ambil semua list master data
 app.get('/api/master', (req, res) => {
     db.all("SELECT * FROM master_items", [], (err, items) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -85,6 +87,7 @@ app.get('/api/master', (req, res) => {
     });
 });
 
+// 2. Tambah data kombinasi Customer + Jenis + Item baru
 app.post('/api/master/item', (req, res) => {
     const { customer, jenis_barang, nama_item } = req.body;
     db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES (?, ?, ?)", 
@@ -94,6 +97,7 @@ app.post('/api/master/item', (req, res) => {
     });
 });
 
+// 3. Tambah nama Proses baru
 app.post('/api/master/proses', (req, res) => {
     const { nama_proses } = req.body;
     db.run("INSERT INTO master_proses (nama_proses) VALUES (?)", [nama_proses], function(err) {
@@ -103,8 +107,9 @@ app.post('/api/master/proses', (req, res) => {
 });
 
 // ==========================================
-// API TRANSAKSI
+// API TRANSAKSI PRODUKSI & PENGHITUNGAN WIP
 // ==========================================
+
 app.post('/api/produksi', (req, res) => {
     const { customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng } = req.body;
     db.run(`INSERT INTO produksi (customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -123,6 +128,7 @@ app.post('/api/delivery', (req, res) => {
     });
 });
 
+// Menghitung sisa WIP berdasarkan kombinasi unik 3 tingkat
 app.get('/api/wip', (req, res) => {
     const query = `
         SELECT 
@@ -191,5 +197,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Aplikasi berjalan di port ${PORT}`);
+    console.log(`Server berjalan lancar di port ${PORT}`);
 });
