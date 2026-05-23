@@ -28,8 +28,9 @@
                 </div>
             </div>
 
-            <div id="master-menu" class="hidden bg-yellow-50 p-6 rounded-lg border-2 border-yellow-300 space-y-4 shadow-inner">
+            <div id="master-menu" class="hidden bg-yellow-50 p-6 rounded-lg border-2 border-yellow-300 space-y-6 shadow-inner">
                 <h3 class="text-lg font-bold text-yellow-800">⚙️ Kelola Data Master</h3>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded shadow space-y-2">
                         <h4 class="font-bold text-sm text-gray-600">Tambah Customer, Jenis & Item Baru:</h4>
@@ -47,6 +48,37 @@
                         <button onclick="addMasterProses()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Tambah Proses</button>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="bg-white p-4 rounded shadow">
+                        <h4 class="font-bold text-sm text-red-600 mb-2">📋 List Item & Opsi Hapus:</h4>
+                        <div class="max-h-48 overflow-y-auto border rounded text-xs">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-2">Customer - Item</th>
+                                        <th class="p-2 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-master-item-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h4 class="font-bold text-sm text-red-600 mb-2">📋 List Proses & Opsi Hapus:</h4>
+                        <div class="max-h-48 overflow-y-auto border rounded text-xs">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-2">Jenis -> Tahapan Proses</th>
+                                        <th class="p-2 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-master-proses-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -62,7 +94,7 @@
                     <label class="block text-xs font-bold text-gray-500">3. PILIH NAMA ITEM</label>
                     <select id="prod-item" class="w-full p-2 border rounded bg-gray-50"></select>
 
-                    <label class="block text-xs font-bold text-gray-500">4. PILIH PROSES KERJA (Tersaring Otomatis)</label>
+                    <label class="block text-xs font-bold text-gray-500">4. PILIH PROSES KERJA</label>
                     <select id="prod-proses" class="w-full p-2 border rounded bg-gray-50"></select>
 
                     <div class="grid grid-cols-2 gap-3 pt-2">
@@ -163,7 +195,47 @@
                 semuaJenis.forEach(j => jSelMaster.innerHTML += `<option value="${j}">${j}</option>`);
 
                 renderCustomerDropdowns();
+                renderManajemenTabelHapus();
             } catch (e) { console.error(e); }
+        }
+
+        // TAMPILKAN DAFTAR ITEM & PROSES UNTUK OPSI HAPUS
+        function renderManajemenTabelHapus() {
+            const itemTable = document.getElementById('list-master-item-table');
+            itemTable.innerHTML = '';
+            masterItems.forEach(i => {
+                itemTable.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2"><b>${i.customer}</b> - ${i.nama_item} (${i.jenis_barang})</td>
+                        <td class="p-2 text-center">
+                            <button onclick="hapusMasterItem(${i.id})" class="text-red-600 font-bold hover:text-red-800">🗑️</button>
+                        </td>
+                    </tr>`;
+            });
+
+            const prosesTable = document.getElementById('list-master-proses-table');
+            prosesTable.innerHTML = '';
+            masterProses.forEach(p => {
+                prosesTable.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2"><span class="text-blue-600">[${p.jenis_barang}]</span> -> ${p.nama_proses}</td>
+                        <td class="p-2 text-center">
+                            <button onclick="hapusMasterProses(${p.id})" class="text-red-600 font-bold hover:text-red-800">🗑️</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function hapusMasterItem(id) {
+            if(!confirm('Apakah kamu yakin ingin menghapus item ini dari sistem?')) return;
+            await fetch(`${API_URL}/api/master/item/${id}`, { method: 'DELETE' });
+            await muatMasterData();
+        }
+
+        async function hapusMasterProses(id) {
+            if(!confirm('Apakah kamu yakin ingin menghapus tahapan proses ini?')) return;
+            await fetch(`${API_URL}/api/master/proses/${id}`, { method: 'DELETE' });
+            await muatMasterData();
         }
 
         function renderCustomerDropdowns() {
@@ -201,7 +273,6 @@
             pItem.innerHTML = '';
             items.forEach(i => pItem.innerHTML += `<option value="${i.nama_item}">${i.nama_item}</option>`);
             
-            // FILTER PROSES KERJA OTOMATIS BERDASARKAN JENIS BARANG
             filterProsesKerja(jenis);
         }
 
