@@ -13,7 +13,6 @@ const pool = new Pool({
   }
 });
 
-// Tes koneksi database di awal server berjalan
 pool.connect((err, client, release) => {
   if (err) {
     return console.error('❌ Gagal koneksi ke database Supabase:', err.stack);
@@ -31,11 +30,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 3. API DATA MASTER (CUSTOMER, ITEM, PROSES)
 // =========================================================================
 
-// Ambil Data Master Item & Proses untuk Dropdown Web
+// Ambil Data Master Item & Proses (Urutan Proses Diurutkan dari Kecil ke Besar)
 app.get('/api/master', async (req, res) => {
   try {
     const itemsRes = await pool.query('SELECT * FROM master_items ORDER BY id DESC');
-    const prosesRes = await pool.query('SELECT * FROM master_proses ORDER BY id DESC');
+    const prosesRes = await pool.query('SELECT * FROM master_proses ORDER BY jenis_barang, urutan_proses ASC');
     res.json({
       items: itemsRes.rows,
       proses: prosesRes.rows
@@ -59,12 +58,13 @@ app.post('/api/master/item', async (req, res) => {
   }
 });
 
-// Tambah Master Proses Baru
+// Tambah Master Proses Baru (Sekarang Menerima Input Urutan Proses)
 app.post('/api/master/proses', async (req, res) => {
-  const { jenis_barang, nama_proses } = req.body;
+  const { jenis_barang, nama_proses, urutan_proses } = req.body;
+  const urutan = parseInt(urutan_proses) || 1;
   try {
-    const queryText = 'INSERT INTO master_proses (jenis_barang, nama_proses) VALUES ($1, $2) RETURNING *';
-    const result = await pool.query(queryText, [jenis_barang, nama_proses]);
+    const queryText = 'INSERT INTO master_proses (jenis_barang, nama_proses, urutan_proses) VALUES ($1, $2, $3) RETURNING *';
+    const result = await pool.query(queryText, [jenis_barang, nama_proses, urutan]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err.message);
@@ -72,7 +72,7 @@ app.post('/api/master/proses', async (req, res) => {
   }
 });
 
-// Hapus Master Item
+// Hapus Master Item & Proses
 app.delete('/api/master/item/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM master_items WHERE id = $1', [req.params.id]);
@@ -83,7 +83,6 @@ app.delete('/api/master/item/:id', async (req, res) => {
   }
 });
 
-// Hapus Master Proses
 app.delete('/api/master/proses/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM master_proses WHERE id = $1', [req.params.id]);
@@ -95,10 +94,9 @@ app.delete('/api/master/proses/:id', async (req, res) => {
 });
 
 // =========================================================================
-// 4. API TRANSAKSI PRODUKSI, DELIVERY & PERHITUNGAN WIP
+// 4. API TRANSAKSI PRODUKSI, DELIVERY & PERHITUNGAN WIP ESTAFET
 // =========================================================================
 
-// Simpan Hasil Kerja Harian
 app.post('/api/produksi', async (req, res) => {
   const { customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng } = req.body;
   try {
@@ -111,7 +109,6 @@ app.post('/api/produksi', async (req, res) => {
   }
 });
 
-// Simpan Catatan Delivery / Surat Jalan
 app.post('/api/delivery', async (req, res) => {
   const { customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim } = req.body;
   try {
@@ -124,34 +121,80 @@ app.post('/api/delivery', async (req, res) => {
   }
 });
 
-// Hitung Logika Pantauan Sisa WIP Aktif Otomatis
+// LOGIKA UTAMA: MENGHITUNG SALDO WIP ESTAFET & GUDANG BARANG JADI
 app.get('/api/wip', async (req, res) => {
   try {
-    // Ambil semua riwayat produksi & pengiriman
-    const prodData = await pool.query('SELECT * FROM produksi');
-    const delivData = await pool.query('SELECT * FROM delivery');
+    // 1. Ambil data master master_proses untuk tahu susunan urutan jalur flow kerja
+    const prosesMaster = await pool.query('SELECT * FROM master_proses ORDER BY jenis_barang, urutan_proses ASC');
     
-    let stok = {};
-
-    // 1. Tambah stok berdasarkan jumlah OK di tiap tahapan proses
-    prodData.rows.forEach(p => {
-      const key = `${p.customer}|${p.jenis_barang}|${p.nama_item}`;
-      if (!stok[key]) stok[key] = { customer: p.customer, jenis_barang: p.jenis_barang, nama_item: p.nama_item, sisa_wip: 0, proses_sekarang: p.proses_sekarang };
-      stok[key].sisa_wip += parseInt(p.jumlah_ok || 0);
-      stok[key].proses_sekarang = p.proses_sekarang; // Ambil proses terakhir yang macet
+    // Kelompokkan urutan proses berdasarkan jenis_barang
+    let ruteProduk = {};
+    prosesMaster.rows.forEach(p => {
+      if (!ruteProduk[p.jenis_barang]) ruteProduk[p.jenis_barang] = [];
+      ruteProduk[p.jenis_barang].push(p.nama_proses);
     });
 
-    // 2. Kurangi stok jika barang sudah dikirim (delivery)
-    delivData.rows.forEach(d => {
-      const key = `${d.customer}|${d.jenis_barang}|${d.nama_item}`;
-      if (stok[key]) {
-        stok[key].sisa_wip -= parseInt(d.jumlah_kirim || 0);
+    // 2. Ambil data riwayat transaksi aktual
+    const prodData = await pool.query('SELECT * FROM produksi ORDER BY id ASC');
+    const delivData = await pool.query('SELECT * FROM delivery ORDER BY id ASC');
+    
+    let saldoWIP = {};  // Kunci: customer|jenis_barang|nama_item|nama_proses
+    let gudangJadi = {}; // Kunci: customer|jenis_barang|nama_item
+
+    // 3. Hitung Logika Pergeseran Estafet dari Input Produksi
+    prodData.rows.forEach(p => {
+      const itemKey = `${p.customer}|${p.jenis_barang}|${p.nama_item}`;
+      const rute = ruteProduk[p.jenis_barang] || [];
+      const indexProsesSekarang = rute.indexOf(p.proses_sekarang);
+      const jmlOK = parseInt(p.jumlah_ok || 0);
+
+      // Tambah saldo di proses yang di-input saat ini
+      const keySekarang = `${itemKey}|${p.proses_sekarang}`;
+      if (!saldoWIP[keySekarang]) {
+        saldoWIP[keySekarang] = { customer: p.customer, jenis_barang: p.jenis_barang, nama_item: p.nama_item, nama_proses: p.proses_sekarang, sisa_wip: 0 };
+      }
+      saldoWIP[keySekarang].sisa_wip += jmlOK;
+
+      // Kurangi saldo di proses SEBELUMNYA (jika ada proses terdahulu di rutenya)
+      if (indexProsesSekarang > 0) {
+        const prosesSebelumnya = rute[indexProsesSekarang - 1];
+        const keySebelumnya = `${itemKey}|${prosesSebelumnya}`;
+        if (saldoWIP[keySebelumnya]) {
+          saldoWIP[keySebelumnya].sisa_wip -= jmlOK;
+        }
+      }
+
+      // Jika ini adalah PROSES PALING AKHIR dari rute, lempar saldo OK langsung ke Gudang Barang Jadi
+      if (rute.length > 0 && indexProsesSekarang === rute.length - 1) {
+        // Potong sisa WIP di stasiun akhir tersebut karena sudah sah jadi Finish Good
+        saldoWIP[keySekarang].sisa_wip -= jmlOK;
+        
+        if (!gudangJadi[itemKey]) {
+          gudangJadi[itemKey] = { customer: p.customer, jenis_barang: p.jenis_barang, nama_item: p.nama_item, stok_jadi: 0 };
+        }
+        gudangJadi[itemKey].stok_jadi += jmlOK;
       }
     });
 
-    // Saring data: Hanya tampilkan item yang WIP-nya masih tersisa di pabrik
-    const hasilWIP = Object.values(stok).filter(item => item.sisa_wip > 0);
-    res.json(hasilWIP);
+    // 4. Potong Stok Gudang Jadi Berdasarkan Pengiriman Surat Jalan (Delivery)
+    delivData.rows.forEach(d => {
+      const itemKey = `${d.customer}|${d.jenis_barang}|${d.nama_item}`;
+      const jmlKirim = parseInt(d.jumlah_kirim || 0);
+      if (gudangJadi[itemKey]) {
+        gudangJadi[itemKey].stok_jadi -= jmlKirim;
+      }
+    });
+
+    // Saring hasil akhir: hanya keluarkan yang nilainya di atas 0
+    const listWIP = Object.values(saldoWIP).filter(w => w.sisa_wip > 0);
+    const listGudang = Object.values(gudangJadi).filter(g => g.stok_jadi > 0);
+
+    // Kirim dua data terpisah ke Frontend web
+    res.json({
+      wip: listWIP,
+      gudang: listGudang
+    });
+
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -159,7 +202,7 @@ app.get('/api/wip', async (req, res) => {
 });
 
 // =========================================================================
-// 5. FITUR DOWNLOAD EXCEL PPIC (DATA DIAMBIL DARI TABEL PRODUKSI)
+// 5. FITUR DOWNLOAD EXCEL PPIC
 // =========================================================================
 app.get('/download-lampiran-ppic', async (req, res) => {
   try {
@@ -175,7 +218,7 @@ app.get('/download-lampiran-ppic', async (req, res) => {
       { header: 'Customer', key: 'customer', width: 20 },
       { header: 'Jenis Barang', key: 'jenis_barang', width: 15 },
       { header: 'Nama Item', key: 'nama_item', width: 20 },
-      { header: 'Proses Terakhir', key: 'proses_sekarang', width: 15 },
+      { header: 'Proses Kerja', key: 'proses_sekarang', width: 15 },
       { header: 'Jumlah OK (Pcs)', key: 'jumlah_ok', width: 15 },
       { header: 'Jumlah NG (Pcs)', key: 'jumlah_ng', width: 15 }
     ];
