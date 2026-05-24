@@ -34,9 +34,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded shadow space-y-2">
                         <h4 class="font-bold text-sm text-gray-600">Tambah Customer, Jenis & Item Baru:</h4>
-                        <input type="text" id="new-cust" placeholder="Nama Customer (Contoh: PT Gudang Garam)" class="w-full p-2 border rounded text-sm">
-                        <input type="text" id="new-jenis" placeholder="Jenis Barang (Contoh: Inner Box)" class="w-full p-2 border rounded text-sm">
-                        <input type="text" id="new-item" placeholder="Nama Item (Contoh: Surya 16 isi 10)" class="w-full p-2 border rounded text-sm">
+                        <input type="text" id="new-cust" placeholder="Nama Customer (Contoh: SAMINDO)" class="w-full p-2 border rounded text-sm">
+                        <input type="text" id="new-jenis" placeholder="Jenis Barang (Contoh: MASTER BOX)" class="w-full p-2 border rounded text-sm">
+                        <input type="text" id="new-item" placeholder="Nama Item (Contoh: 00616)" class="w-full p-2 border rounded text-sm">
                         <button onclick="addMasterItem()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Daftarkan Item</button>
                     </div>
                     <div class="bg-white p-4 rounded shadow space-y-2">
@@ -44,7 +44,8 @@
                         <select id="new-proses-jenis" class="w-full p-2 border rounded text-sm bg-gray-50">
                             <option value="">-- Pilih Jenis Barang Dahulu --</option>
                         </select>
-                        <input type="text" id="new-proses" placeholder="Nama Proses (Contoh: Diecut)" class="w-full p-2 border rounded text-sm">
+                        <input type="text" id="new-proses" placeholder="Nama Proses (Contoh: FLEXO)" class="w-full p-2 border rounded text-sm">
+                        <input type="number" id="new-proses-urutan" placeholder="No Urutan Alur Kerja (Contoh: 1, 2, 3)" class="w-full p-2 border rounded text-sm" min="1">
                         <button onclick="addMasterProses()" class="w-full bg-green-600 text-white p-2 text-sm rounded font-bold">➕ Tambah Proses</button>
                     </div>
                 </div>
@@ -70,7 +71,7 @@
                             <table class="w-full text-left">
                                 <thead class="bg-gray-100 sticky top-0">
                                     <tr>
-                                        <th class="p-2">Jenis -> Tahapan Proses</th>
+                                        <th class="p-2">Jenis -> Tahapan Proses (Urutan)</th>
                                         <th class="p-2 text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -131,7 +132,6 @@
 
                     <button onclick="kirimDelivery()" class="w-full bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700 mt-2">Catat Pengiriman</button>
                     
-                    <!-- TOMBOL TAMBAHAN UNTUK LAMPIRAN EXCEL PPIC -->
                     <a href="/download-lampiran-ppic" target="_blank" class="block w-full text-center bg-sky-600 text-white p-2 rounded font-bold hover:bg-sky-700 transition mt-2">
                         📂 Download Lampiran Keke PPIC (.xlsx)
                     </a>
@@ -139,21 +139,37 @@
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-700">📊 Pantauan Sisa WIP Aktif</h3>
-                </div>
+                <h3 class="text-lg font-bold text-amber-700 mb-4">📊 1. Pantauan Sisa WIP Aktif (Di Area Pabrik)</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse border border-gray-200 text-left text-sm">
                         <thead>
-                            <tr class="bg-gray-100 text-gray-700">
+                            <tr class="bg-amber-50 text-gray-700">
                                 <th class="border p-3">Customer</th>
                                 <th class="border p-3">Jenis Barang</th>
                                 <th class="border p-3">Nama Item</th>
-                                <th class="border p-3">Proses Macet</th>
-                                <th class="border p-3">Sisa WIP</th>
+                                <th class="border p-3">Stasiun Kerja Macet</th>
+                                <th class="border p-3">Sisa WIP Tersendat</th>
                             </tr>
                         </thead>
                         <tbody id="tabelWIP"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
+                <h3 class="text-lg font-bold text-green-700 mb-4">📦 2. Gudang Barang Jadi (Finished Goods - Siap Kirim)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-200 text-left text-sm">
+                        <thead>
+                            <tr class="bg-green-50 text-gray-700">
+                                <th class="border p-3">Customer</th>
+                                <th class="border p-3">Jenis Barang</th>
+                                <th class="border p-3">Nama Item</th>
+                                <th class="border p-3">Status Gudang</th>
+                                <th class="border p-3">Stok Siap Jalan (Pcs)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelGudang"></tbody>
                     </table>
                 </div>
             </div>
@@ -181,7 +197,7 @@
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('user-display').innerText = 'ADMIN';
             muatMasterData();
-            muatTabelWIP();
+            muatTabelDashboard();
         }
 
         function toggleMasterMenu() { document.getElementById('master-menu').classList.toggle('hidden'); }
@@ -193,7 +209,6 @@
                 masterItems = d.items;
                 masterProses = d.proses;
 
-                // Update pilihan jenis barang di menu master tambah proses
                 const jSelMaster = document.getElementById('new-proses-jenis');
                 jSelMaster.innerHTML = '<option value="">-- Pilih Jenis Barang --</option>';
                 const semuaJenis = [...new Set(masterItems.map(i => i.jenis_barang))];
@@ -204,7 +219,6 @@
             } catch (e) { console.error(e); }
         }
 
-        // TAMPILKAN DAFTAR ITEM & PROSES UNTUK OPSI HAPUS
         function renderManajemenTabelHapus() {
             const itemTable = document.getElementById('list-master-item-table');
             itemTable.innerHTML = '';
@@ -223,7 +237,7 @@
             masterProses.forEach(p => {
                 prosesTable.innerHTML += `
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2"><span class="text-blue-600">[${p.jenis_barang}]</span> -> ${p.nama_proses}</td>
+                        <td class="p-2"><span class="text-blue-600">[${p.jenis_barang}]</span> -> ${p.nama_proses} <b class="text-gray-500">(Urutan: ${p.urutan_proses || 1})</b></td>
                         <td class="p-2 text-center">
                             <button onclick="hapusMasterProses(${p.id})" class="text-red-600 font-bold hover:text-red-800">🗑️</button>
                         </td>
@@ -232,13 +246,13 @@
         }
 
         async function hapusMasterItem(id) {
-            if(!confirm('Apakah kamu yakin ingin menghapus item ini dari sistem?')) return;
+            if(!confirm('Apakah kamu yakin menghapus item ini?')) return;
             await fetch(`${API_URL}/api/master/item/${id}`, { method: 'DELETE' });
             await muatMasterData();
         }
 
         async function hapusMasterProses(id) {
-            if(!confirm('Apakah kamu yakin ingin menghapus tahapan proses ini?')) return;
+            if(!confirm('Apakah kamu yakin menghapus proses ini?')) return;
             await fetch(`${API_URL}/api/master/proses/${id}`, { method: 'DELETE' });
             await muatMasterData();
         }
@@ -333,37 +347,61 @@
         async function addMasterProses() {
             const jenis_barang = document.getElementById('new-proses-jenis').value;
             const nama_proses = document.getElementById('new-proses').value.trim();
-            if(!jenis_barang || !nama_proses) return alert('Pilih jenis barang dan isi nama proses!');
+            const urutan_proses = document.getElementById('new-proses-urutan').value;
+            if(!jenis_barang || !nama_proses || !urutan_proses) return alert('Pilih jenis, isi nama proses & nomor urutan!');
             
             await fetch(`${API_URL}/api/master/proses`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ jenis_barang, nama_proses })
+                body: JSON.stringify({ jenis_barang, nama_proses, urutan_proses })
             });
             document.getElementById('new-proses').value = '';
+            document.getElementById('new-proses-urutan').value = '';
             await muatMasterData();
-            alert('Proses ditambahkan khusus untuk jenis barang ini!');
+            alert('Proses & nomor urut berhasil ditambahkan!');
         }
 
-        async function muatTabelWIP() {
-            const r = await fetch(`${API_URL}/api/wip`);
-            const data = await r.json();
-            const tbody = document.getElementById('tabelWIP');
-            tbody.innerHTML = '';
-            if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-green-700 font-semibold bg-green-50">✅ Semua Proses Clear!</td></tr>`;
-                return;
-            }
-            data.forEach(w => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 border-b">
-                        <td class="p-3 font-semibold text-gray-700">${w.customer}</td>
-                        <td class="p-3 text-gray-600">${w.jenis_barang}</td>
-                        <td class="p-3 italic text-gray-600">${w.nama_item}</td>
-                        <td class="p-3"><span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">${w.proses_sekarang}</span></td>
-                        <td class="p-3 font-bold text-red-600">${w.sisa_wip.toLocaleString()} pcs</td>
-                    </tr>`;
-            });
+        async function muatTabelDashboard() {
+            try {
+                const r = await fetch(`${API_URL}/api/wip`);
+                const resData = await r.json();
+                
+                // 1. RENDER TABEL WIP AKTIF
+                const tbodyWIP = document.getElementById('tabelWIP');
+                tbodyWIP.innerHTML = '';
+                if(!resData.wip || resData.wip.length === 0) {
+                    tbodyWIP.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-green-700 font-semibold bg-green-50">✅ Lantai Produksi Bersih (Clear)!</td></tr>`;
+                } else {
+                    resData.wip.forEach(w => {
+                        tbodyWIP.innerHTML += `
+                            <tr class="hover:bg-gray-50 border-b">
+                                <td class="p-3 font-semibold text-gray-700">${w.customer}</td>
+                                <td class="p-3 text-gray-600">${w.jenis_barang}</td>
+                                <td class="p-3 italic text-gray-600">${w.nama_item}</td>
+                                <td class="p-3"><span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">${w.nama_proses}</span></td>
+                                <td class="p-3 font-bold text-amber-600">${w.sisa_wip.toLocaleString()} pcs</td>
+                            </tr>`;
+                    });
+                }
+
+                // 2. RENDER TABEL GUDANG JADI
+                const tbodyGudang = document.getElementById('tabelGudang');
+                tbodyGudang.innerHTML = '';
+                if(!resData.gudang || resData.gudang.length === 0) {
+                    tbodyGudang.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500 italic bg-gray-50">Belum ada stok produk siap kirim di gudang.</td></tr>`;
+                } else {
+                    resData.gudang.forEach(g => {
+                        tbodyGudang.innerHTML += `
+                            <tr class="hover:bg-gray-50 border-b bg-green-50/30">
+                                <td class="p-3 font-semibold text-gray-700">${g.customer}</td>
+                                <td class="p-3 text-gray-600">${g.jenis_barang}</td>
+                                <td class="p-3 italic text-gray-600">${g.nama_item}</td>
+                                <td class="p-3"><span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">READY STOCK</span></td>
+                                <td class="p-3 font-bold text-green-600">${g.stok_jadi.toLocaleString()} pcs</td>
+                            </tr>`;
+                    });
+                }
+            } catch (error) { console.error(error); }
         }
 
         async function kirimHasilKerja() {
@@ -374,7 +412,7 @@
             const jumlah_ok = parseInt(document.getElementById('jmlOK').value) || 0;
             const jumlah_ng = parseInt(document.getElementById('jmlNG').value) || 0;
 
-            if(!proses_sekarang) return alert('Proses belum dipilih/tidak tersedia!');
+            if(!proses_sekarang) return alert('Proses belum dipilih!');
 
             await fetch(`${API_URL}/api/produksi`, {
                 method: 'POST',
@@ -383,8 +421,8 @@
             });
             document.getElementById('jmlOK').value = '';
             document.getElementById('jmlNG').value = '';
-            muatTabelWIP();
-            alert('Data kerja disimpan!');
+            muatTabelDashboard();
+            alert('Data kerja disimpan & alur WIP digeser!');
         }
 
         async function kirimDelivery() {
@@ -394,6 +432,8 @@
             const no_surat_jalan = document.getElementById('noSJ').value.trim();
             const jumlah_kirim = parseInt(document.getElementById('jmlDeliv').value) || 0;
 
+            if(!no_surat_jalan || jumlah_kirim <= 0) return alert('Lengkapi No Surat Jalan & Jumlah Kirim!');
+
             await fetch(`${API_URL}/api/delivery`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -401,11 +441,11 @@
             });
             document.getElementById('noSJ').value = '';
             document.getElementById('jmlDeliv').value = '';
-            muatTabelWIP();
-            alert('Pengiriman dicatat!');
+            muatTabelDashboard();
+            alert('Pengiriman berhasil dicatat & memotong stok gudang jadi!');
         }
 
         window.onload = bootApp;
     </script>
 </body>
-</html>
+    </html>
