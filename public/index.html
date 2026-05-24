@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MONITOR WIP MANUFAKTUR V2</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Font Inter & Google Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- Library SheetJS untuk Export Excel Langsung dari Browser -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         /* Kustomisasi scrollbar biar estetik gelap */
@@ -20,6 +24,7 @@
 </head>
 <body class="bg-neutral-950 text-zinc-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-neutral-950">
 
+    <!-- HEADER UTAMA -->
     <header class="border-b border-zinc-800/60 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -41,8 +46,10 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
+        <!-- ROW 1: INPUT FORM DENGAN DUA PANEL -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
+            <!-- PANEL 1: INPUT PROSES PRODUKSI -->
             <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-cyan-500 to-blue-500"></div>
                 <div class="flex items-center gap-2 mb-4">
@@ -76,6 +83,7 @@
                 </form>
             </section>
 
+            <!-- PANEL 2: INPUT SURAT JALAN / OUTBOUND -->
             <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-emerald-500 to-teal-500"></div>
                 <div class="flex items-center gap-2 mb-4">
@@ -108,15 +116,22 @@
             </section>
         </div>
 
+        <!-- ROW 2: CORE DASHBOARD MONITORING (TABEL) -->
         <div class="grid grid-cols-1 gap-6">
             
+            <!-- MONITOR 1: TABEL WIP AKTIF -->
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-2">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-200">1. Real-Time Monitor Antrean WIP Aktif</h2>
                     </div>
-                    <span class="text-[10px] bg-amber-500/10 text-amber-400 font-semibold px-2 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">Lantai Produksi</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportTableToExcel('tabelWip', 'Live-Antrean-WIP')" class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-300 hover:text-amber-400 text-[11px] font-semibold rounded-lg transition-all cursor-pointer">
+                            <span class="material-symbols-rounded text-xs">download</span> Excel
+                        </button>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 font-semibold px-2 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">Lantai Produksi</span>
+                    </div>
                 </div>
                 
                 <div class="overflow-x-auto">
@@ -131,18 +146,25 @@
                             </tr>
                         </thead>
                         <tbody id="tabelWip" class="text-xs divide-y divide-zinc-800/40">
-                            </tbody>
+                            <!-- Injeksi JS -->
+                        </tbody>
                     </table>
                 </div>
             </section>
 
+            <!-- MONITOR 2: TABEL BARANG JADI (READY STOCK) -->
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-2">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-200">2. Saldo Gudang Barang Jadi (Ready Stock)</h2>
                     </div>
-                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-wider">Fulfillment</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportTableToExcel('tabelGudang', 'Saldo-Gudang-Jadi')" class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 hover:border-emerald-500 text-zinc-300 hover:text-emerald-400 text-[11px] font-semibold rounded-lg transition-all cursor-pointer">
+                            <span class="material-symbols-rounded text-xs">download</span> Excel
+                        </button>
+                        <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-wider">Fulfillment</span>
+                    </div>
                 </div>
                 
                 <div class="overflow-x-auto">
@@ -156,13 +178,15 @@
                             </tr>
                         </thead>
                         <tbody id="tabelGudang" class="text-xs divide-y divide-zinc-800/40">
-                            </tbody>
+                            <!-- Injeksi JS -->
+                        </tbody>
                     </table>
                 </div>
             </section>
         </div>
     </main>
 
+    <!-- FLOATING MODAL: CONFIGURATION HUB (MENU KUNING LAMA) -->
     <div id="configModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative space-y-6">
             
@@ -176,8 +200,10 @@
                 </button>
             </div>
 
+            <!-- MODAL GRID CONTENT -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
+                <!-- BAGIAN KIRI: DAFTAR BARANG BARU -->
                 <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
                     <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
                         <span class="material-symbols-rounded text-sm text-cyan-400">add_box</span> Register Item Baru
@@ -200,6 +226,7 @@
                         </button>
                     </form>
 
+                    <!-- TABEL REKAP ITEM YANG TERDAFTAR -->
                     <div class="mt-4 border-t border-zinc-800/80 pt-3">
                         <h5 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Item Terdaftar Saat Ini:</h5>
                         <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
@@ -216,6 +243,7 @@
                     </div>
                 </div>
 
+                <!-- BAGIAN KANAN: MANAGING ROUTING ALUR KERJA (URUTAN PROSES) -->
                 <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
                     <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
                         <span class="material-symbols-rounded text-sm text-amber-400">account_tree</span> Atur Tahapan Alur Proses (Routing)
@@ -238,6 +266,7 @@
                         </button>
                     </form>
 
+                    <!-- TABEL DAFTAR ALUR MAPPER -->
                     <div class="mt-4 border-t border-zinc-800/80 pt-3">
                         <h5 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Matriks Alur Saat Ini:</h5>
                         <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
@@ -260,6 +289,7 @@
         </div>
     </div>
 
+    <!-- LOGIKA SKRIP ENGINE HUBUNGAN KE BACKEND SERVER LAMA -->
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:3000/api'
@@ -549,6 +579,30 @@
                 await fetch(`${API_URL}/master/proses/${id}`, { method: 'DELETE' });
                 loadConfigData();
             }
+        }
+
+        // FUNGSI UTAMA: ENGINE DOWNLOAD EXCEL LANGSUNG DARI DOM TABEL HTML
+        function exportTableToExcel(tableID, filename = '') {
+            const table = document.getElementById(tableID);
+            
+            // Cek jika tabel kosong / hanya ada pesan teks kosong
+            if (table.rows.length <= 1 && table.innerHTML.includes('text-zinc-500')) {
+                alert('⚠️ Tidak ada data aktif di tabel untuk di-download!');
+                return;
+            }
+
+            // Ambil element tabel terdekat yang punya tag <table> utuh termasuk header-nya
+            const parentTable = table.closest('section').querySelector('table');
+            
+            // Konversi tabel HTML menjadi objek lembar kerja SheetJS
+            const wb = XLSX.utils.table_to_book(parentTable, { sheet: "Data Report" });
+            
+            // Generate nama file otomatis beserta tanggal unduh
+            const today = new Date().toISOString().slice(0, 10);
+            const fullFileName = `${filename}_${today}.xlsx`;
+            
+            // Trigger download otomatis ke device
+            XLSX.writeFile(wb, fullFileName);
         }
 
         // INIT DATA PERTAMA KALI SAAT HALAMAN DIBUKA
