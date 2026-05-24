@@ -1,177 +1,114 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const path = require('path');
-const cors = require('cors');
-
+const excelJS = require('exceljs'); // Library untuk fitur ekspor Excel ke PPIC
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-app.use(cors());
+// 1. PENGATURAN DATABASE POSTGRESQL (SUPABASE)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Wajib aktif agar koneksi ke Supabase aman & stabil
+  }
+});
+
+// Tes koneksi database di awal server berjalan
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error('❌ Gagal koneksi ke database Supabase:', err.stack);
+  }
+  console.log('✅ Koneksi ke database Supabase BERHASIL!');
+  release();
+});
+
+// 2. MIDDLEWARE
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const db = new sqlite3.Database('./produksi.db', (err) => {
-    if (err) console.error(err.message);
-    console.log('Terhubung ke database SQLite.');
-});
+// =========================================================================
+// 3. FITUR UTAMA: EKSPOR EXCEL UNTUK LAMPIRAN PPIC (KEKE)
+// =========================================================================
+app.get('/download-lampiran-ppic', async (req, res) => {
+  try {
+    // Mengambil data dari tabel produksi di Supabase
+    const result = await pool.query('SELECT * FROM produksi ORDER BY tanggal DESC');
+    const dataProduksi = result.rows;
 
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS produksi (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customer TEXT,
-        jenis_barang TEXT,
-        nama_item TEXT,
-        proses_sekarang TEXT,
-        jumlah_ok INTEGER,
-        jumlah_ng INTEGER,
-        waktu TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Lampiran PPIC');
 
-    db.run(`CREATE TABLE IF NOT EXISTS delivery (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customer TEXT,
-        jenis_barang TEXT,
-        nama_item TEXT,
-        no_surat_jalan TEXT,
-        jumlah_kirim INTEGER,
-        waktu TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
+    // Mengatur Header Kolom Excel
+    worksheet.columns = [
+      { header: 'No', key: 'no', width: 5 },
+      { header: 'Tanggal', key: 'tanggal', width: 15 },
+      { header: 'Nama Keke / Bagian', key: 'nama_keke', width: 25 },
+      { header: 'Target Produksi', key: 'target', width: 15 },
+      { header: 'Hasil Aktual', key: 'aktual', width: 15 },
+      { header: 'Status', key: 'status', width: 15 }
+    ];
 
-    db.run(`CREATE TABLE IF NOT EXISTS master_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customer TEXT,
-        jenis_barang TEXT,
-        nama_item TEXT
-    )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS master_proses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        jenis_barang TEXT,
-        nama_proses TEXT
-    )`);
-});
-
-// API AMBIL DATA MASTER
-app.get('/api/master', (req, res) => {
-    db.all("SELECT * FROM master_items", [], (err, items) => {
-        if (err) return res.status(500).json({ error: err.message });
-        db.all("SELECT * FROM master_proses", [], (err, proses) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ items, proses });
-        });
+    // Memasukkan data ke dalam baris Excel
+    dataProduksi.forEach((item, index) => {
+      worksheet.addRow({
+        no: index + 1,
+        tanggal: item.tanggal,
+        nama_keke: item.nama_keke,
+        target: item.target,
+        aktual: item.aktual,
+        status: item.aktual >= item.target ? 'Mencapai Target' : 'Kurang'
+      });
     });
-});
 
-// API TAMBAH DATA MASTER
-app.post('/api/master/item', (req, res) => {
-    const { customer, jenis_barang, nama_item } = req.body;
-    db.run("INSERT INTO master_items (customer, jenis_barang, nama_item) VALUES (?, ?, ?)", 
-        [customer, jenis_barang, nama_item], function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
+    // Membuat header Excel menjadi tebal (Bold) agar rapi
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
     });
+
+    // Mengirim file Excel langsung ke browser HP/Laptop untuk di-download
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Lampiran_Keke_PPIC.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error('Gagal membuat lampiran Excel:', error);
+    res.status(500).send('Terjadi kesalahan saat mengunduh lampiran PPIC.');
+  }
 });
 
-app.post('/api/master/proses', (req, res) => {
-    const { jenis_barang, nama_proses } = req.body;
-    db.run("INSERT INTO master_proses (jenis_barang, nama_proses) VALUES (?, ?)", [jenis_barang, nama_proses], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
+// =========================================================================
+// 4. API ENDPOINTS LAINNYA (CONTOH QUERY POSTGRESQL)
+// =========================================================================
+
+// API Ambil Semua Data Produksi
+app.get('/api/produksi', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM produksi ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 });
 
-// ==========================================
-// FITUR BARU: API HAPUS DATA MASTER
-// ==========================================
-app.delete('/api/master/item/:id', (req, res) => {
-    db.run("DELETE FROM master_items WHERE id = ?", [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
+// API Tambah Data Produksi Baru (Menggunakan $1, $2 dst pengganti tanda tanya SQLite)
+app.post('/api/produksi', async (req, res) => {
+  const { tanggal, nama_keke, target, aktual } = req.body;
+  try {
+    const queryText = 'INSERT INTO produksi (tanggal, nama_keke, target, aktual) VALUES ($1, $2, $3, $4) RETURNING *';
+    const values = [tanggal, nama_keke, target, aktual];
+    const result = await pool.query(queryText, values);
+    res.json({ message: 'Data berhasil disimpan!', data: result.rows[0] });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 });
 
-app.delete('/api/master/proses/:id', (req, res) => {
-    db.run("DELETE FROM master_proses WHERE id = ?", [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
+// 5. MENJALANKAN SERVER
+app.listen(port, () => {
+  console.log(`🚀 Server berjalan mulus di port ${port}`);
 });
-
-// API TRANSAKSI PRODUKSI
-app.post('/api/produksi', (req, res) => {
-    const { customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng } = req.body;
-    db.run(`INSERT INTO produksi (customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng) VALUES (?, ?, ?, ?, ?, ?)`,
-        [customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng], function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-    });
-});
-
-app.post('/api/delivery', (req, res) => {
-    const { customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim } = req.body;
-    db.run(`INSERT INTO delivery (customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim) VALUES (?, ?, ?, ?, ?)`,
-        [customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim], function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-    });
-});
-
-app.get('/api/wip', (req, res) => {
-    const query = `
-        SELECT customer, jenis_barang, nama_item, proses_sekarang, SUM(jumlah_ok) as total_masuk
-        FROM produksi GROUP BY customer, jenis_barang, nama_item, proses_sekarang
-    `;
-    db.all(query, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        db.all(`SELECT customer, jenis_barang, nama_item, SUM(jumlah_kirim) as total_kirim FROM delivery GROUP BY customer, jenis_barang, nama_item`, [], (err, delivRows) => {
-            db.all("SELECT jenis_barang, nama_proses FROM master_proses", [], (err, listProses) => {
-                let hasilWIP = [];
-                let diproses = {};
-                rows.forEach(r => {
-                    const key = `${r.customer}|${r.jenis_barang}|${r.nama_item}`;
-                    if (!diproses[key]) diproses[key] = {};
-                    diproses[key][r.proses_sekarang] = r.total_masuk;
-                });
-
-                let kirimMap = {};
-                delivRows.forEach(d => { 
-                    kirimMap[`${d.customer}|${d.jenis_barang}|${d.nama_item}`] = d.total_kirim; 
-                });
-
-                rows.forEach(r => {
-                    const key = `${r.customer}|${r.jenis_barang}|${r.nama_item}`;
-                    const alurProses = listProses.filter(p => p.jenis_barang === r.jenis_barang).map(p => p.nama_proses);
-                    const idx = alurProses.indexOf(r.proses_sekarang);
-
-                    if (idx !== -1) {
-                        let sisa = 0;
-                        if (idx === alurProses.length - 1) {
-                            const totalKirim = kirimMap[key] || 0;
-                            sisa = r.total_masuk - totalKirim;
-                        } else {
-                            const prosesBerikutnya = alurProses[idx + 1];
-                            const totalLolos = (diproses[key] && diproses[key][prosesBerikutnya]) || 0;
-                            sisa = r.total_masuk - totalLolos;
-                        }
-
-                        if (sisa > 0) {
-                            hasilWIP.push({
-                                customer: r.customer,
-                                jenis_barang: r.jenis_barang,
-                                nama_item: r.nama_item,
-                                proses_sekarang: r.proses_sekarang,
-                                sisa_wip: sisa
-                            });
-                        }
-                    }
-                });
-                res.json(hasilWIP);
-            });
-        });
-    });
-});
-
-app.get('/api/export-excel', (req, res) => { res.redirect('/api/wip'); });
-app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
-
-app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
