@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MONITOR WIP MANUFAKTUR V2</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Font Inter & Google Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -22,7 +20,6 @@
 </head>
 <body class="bg-neutral-950 text-zinc-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-neutral-950">
 
-    <!-- HEADER UTAMA -->
     <header class="border-b border-zinc-800/60 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -44,10 +41,8 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- ROW 1: INPUT FORM DENGAN DUA PANEL -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            <!-- PANEL 1: INPUT PROSES PRODUKSI -->
             <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-cyan-500 to-blue-500"></div>
                 <div class="flex items-center gap-2 mb-4">
@@ -81,7 +76,6 @@
                 </form>
             </section>
 
-            <!-- PANEL 2: INPUT SURAT JALAN / OUTBOUND -->
             <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-emerald-500 to-teal-500"></div>
                 <div class="flex items-center gap-2 mb-4">
@@ -114,10 +108,8 @@
             </section>
         </div>
 
-        <!-- ROW 2: CORE DASHBOARD MONITORING (TABEL) -->
         <div class="grid grid-cols-1 gap-6">
             
-            <!-- MONITOR 1: TABEL WIP AKTIF -->
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-2">
                     <div class="flex items-center gap-2">
@@ -139,13 +131,11 @@
                             </tr>
                         </thead>
                         <tbody id="tabelWip" class="text-xs divide-y divide-zinc-800/40">
-                            <!-- Injeksi JS -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MONITOR 2: TABEL BARANG JADI (READY STOCK) -->
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-2">
                     <div class="flex items-center gap-2">
@@ -166,15 +156,13 @@
                             </tr>
                         </thead>
                         <tbody id="tabelGudang" class="text-xs divide-y divide-zinc-800/40">
-                            <!-- Injeksi JS -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- FLOATING MODAL: CONFIGURATION HUB (MENU KUNING LAMA) -->
     <div id="configModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative space-y-6">
             
@@ -188,10 +176,8 @@
                 </button>
             </div>
 
-            <!-- MODAL GRID CONTENT -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <!-- BAGIAN KIRI: DAFTAR BARANG BARU -->
                 <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
                     <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
                         <span class="material-symbols-rounded text-sm text-cyan-400">add_box</span> Register Item Baru
@@ -214,7 +200,6 @@
                         </button>
                     </form>
 
-                    <!-- TABEL REKAP ITEM YANG TERDAFTAR -->
                     <div class="mt-4 border-t border-zinc-800/80 pt-3">
                         <h5 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Item Terdaftar Saat Ini:</h5>
                         <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
@@ -231,7 +216,6 @@
                     </div>
                 </div>
 
-                <!-- BAGIAN KANAN: MANAGING ROUTING ALUR KERJA (URUTAN PROSES) -->
                 <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
                     <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
                         <span class="material-symbols-rounded text-sm text-amber-400">account_tree</span> Atur Tahapan Alur Proses (Routing)
@@ -254,7 +238,6 @@
                         </button>
                     </form>
 
-                    <!-- TABEL DAFTAR ALUR MAPPER -->
                     <div class="mt-4 border-t border-zinc-800/80 pt-3">
                         <h5 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Matriks Alur Saat Ini:</h5>
                         <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
@@ -277,7 +260,6 @@
         </div>
     </div>
 
-    <!-- LOGIKA SKRIP ENGINE HUBUNGAN KE BACKEND SERVER -->
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:3000/api'
@@ -297,59 +279,56 @@
             }
         }
 
-        // AMBIL DATA REKAP UNTUK MAIN DISPLAY DASHBOARD
+        // AMBIL DATA REKAP UNTUK MAIN DISPLAY DASHBOARD (MENYAMAKAN JALUR SERVER LAMA)
         async function loadDashboardData() {
             try {
-                // Ambil daftar item untuk dropdown form
-                const resItem = await fetch(`${API_URL}/master-item`);
-                dataMasterItem = await resItem.json();
+                const r = await fetch(`${API_URL}/master`);
+                const d = await r.json();
+                dataMasterItem = d.items || [];
+                dataMasterRouting = d.proses || [];
                 
-                // Isi Dropdown Produksi & Delivery
                 const prodSelect = document.getElementById('prodItem');
                 const delSelect = document.getElementById('delItem');
                 
                 let optionHtml = '<option value="">-- Pilih Item --</option>';
                 dataMasterItem.forEach(it => {
-                    optionHtml += `<option value="${it.id}">${it.customer_name} | ${it.jenis_box} | ${it.kode_barang}</option>`;
+                    optionHtml += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`;
                 });
                 prodSelect.innerHTML = optionHtml;
                 delSelect.innerHTML = optionHtml;
 
-                // Ambil Data Kalkulasi WIP Aktif
-                const resWip = await fetch(`${API_URL}/dashboard/wip`);
-                const wipData = await resWip.json();
-                const tbodyWip = document.getElementById('tabelWip');
+                // Ambil Data WIP Real-time
+                const resWip = await fetch(`${API_URL}/wip`);
+                const resData = await resWip.json();
                 
-                if (wipData.length === 0) {
+                const tbodyWip = document.getElementById('tabelWip');
+                if(!resData.wip || resData.wip.length === 0) {
                     tbodyWip.innerHTML = `<tr><td colspan="5" class="px-5 py-8 text-center text-zinc-500 font-medium tracking-wide">✨ Lantai Produksi Bersih (Clear)! Tidak ada antrean sisa WIP.</td></tr>`;
                 } else {
-                    tbodyWip.innerHTML = wipData.map(w => `
+                    tbodyWip.innerHTML = resData.wip.map(w => `
                         <tr class="hover:bg-zinc-900/40 transition-colors">
-                            <td class="px-5 py-3.5 font-medium text-zinc-300">${w.customer_name}</td>
-                            <td class="px-4 py-3.5 text-zinc-400">${w.jenis_box}</td>
-                            <td class="px-4 py-3.5 font-mono text-zinc-400">${w.kode_barang}</td>
+                            <td class="px-5 py-3.5 font-medium text-zinc-300">${w.customer}</td>
+                            <td class="px-4 py-3.5 text-zinc-400">${w.jenis_barang}</td>
+                            <td class="px-4 py-3.5 font-mono text-zinc-400">${w.nama_item}</td>
                             <td class="px-4 py-3.5 text-center">
-                                <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">${w.nama_proses}</span>
+                                <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">${w.proses_sekarang || w.nama_proses}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-amber-400 tracking-wide">${Number(w.sisa_wip).toLocaleString('id-ID')}</td>
                         </tr>
                     `).join('');
                 }
 
-                // Ambil Data Saldo Gudang Barang Jadi
-                const resGudang = await fetch(`${API_URL}/dashboard/gudang-jadi`);
-                const fgData = await resGudang.json();
+                // Ambil Data Gudang Jadi
                 const tbodyGudang = document.getElementById('tabelGudang');
-                
-                if (fgData.length === 0) {
+                if(!resData.gudang || resData.gudang.length === 0) {
                     tbodyGudang.innerHTML = `<tr><td colspan="4" class="px-5 py-8 text-center text-zinc-500 font-medium tracking-wide">📦 Gudang Barang Jadi Kosong. Silakan selesaikan proses QC final.</td></tr>`;
                 } else {
-                    tbodyGudang.innerHTML = fgData.map(g => `
+                    tbodyGudang.innerHTML = resData.gudang.map(g => `
                         <tr class="hover:bg-zinc-900/40 transition-colors">
-                            <td class="px-5 py-3.5 font-medium text-zinc-300">${g.customer_name}</td>
-                            <td class="px-4 py-3.5 text-zinc-400">${g.jenis_box}</td>
-                            <td class="px-4 py-3.5 font-mono text-zinc-400">${g.kode_barang}</td>
-                            <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-emerald-400 tracking-wide">${Number(g.stok_ready).toLocaleString('id-ID')}</td>
+                            <td class="px-5 py-3.5 font-medium text-zinc-300">${g.customer}</td>
+                            <td class="px-4 py-3.5 text-zinc-400">${g.jenis_barang}</td>
+                            <td class="px-4 py-3.5 font-mono text-zinc-400">${g.nama_item}</td>
+                            <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-emerald-400 tracking-wide">${Number(g.stok_jadi || g.stok_ready || 0).toLocaleString('id-ID')}</td>
                         </tr>
                     `).join('');
                 }
@@ -358,7 +337,7 @@
             }
         }
 
-        // EVENT DROPDOWN BINDING: Saat Item di pilih, tampilkan opsi stasiun kerjanya secara urut angka
+        // EVENT DROPDOWN BINDING: Saat Item dipilih, tampilkan opsi stasiun kerjanya secara urut angka
         document.getElementById('prodItem').addEventListener('change', async (e) => {
             const itemId = e.target.value;
             const selectProses = document.getElementById('prodProses');
@@ -367,18 +346,14 @@
 
             const selectedItem = dataMasterItem.find(i => i.id == itemId);
             if(selectedItem) {
-                try {
-                    const res = await fetch(`${API_URL}/master-routing/${encodeURIComponent(selectedItem.jenis_box)}`);
-                    const routingList = await res.json();
-                    if(routingList.length === 0) {
-                        selectProses.innerHTML = '<option value="">⚠️ Alur Proses Belum Diatur!</option>';
-                    } else {
-                        routingList.forEach(r => {
-                            selectProses.innerHTML += `<option value="${r.nama_proses}">Urutan ${r.urutan_proses}: ${r.nama_proses}</option>`;
-                        });
-                    }
-                } catch(err) {
-                    console.error(err);
+                const filteredRouting = dataMasterRouting.filter(r => r.jenis_barang === selectedItem.jenis_barang);
+                if(filteredRouting.length === 0) {
+                    selectProses.innerHTML = '<option value="">⚠️ Alur Proses Belum Diatur!</option>';
+                } else {
+                    filteredRouting.sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
+                    filteredRouting.forEach(r => {
+                        selectProses.innerHTML += `<option value="${r.nama_proses}">Urutan ${r.urutan_proses || 1}: ${r.nama_proses}</option>`;
+                    });
                 }
             }
         });
@@ -386,20 +361,18 @@
         // AMBIL DATA INTEGRASI KHUSUS DI DALAM MODAL PENGATURAN
         async function loadConfigData() {
             try {
-                const [rItem, rRoute] = await Promise.all([
-                    fetch(`${API_URL}/master-item`),
-                    fetch(`${API_URL}/master-routing`)
-                ]);
-                dataMasterItem = await rItem.json();
-                dataMasterRouting = await rRoute.json();
+                const r = await fetch(`${API_URL}/master`);
+                const d = await r.json();
+                dataMasterItem = d.items || [];
+                dataMasterRouting = d.proses || [];
 
                 // Render List Master Item
                 const tbodyItem = document.getElementById('listMasterItem');
                 tbodyItem.innerHTML = dataMasterItem.map(i => `
-                    <tr class="hover:bg-zinc-900/60">
+                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60">
                         <td class="p-2 font-medium text-zinc-300">
-                            <span class="text-cyan-400 font-bold font-mono text-[10px]">[${i.kode_barang}]</span> ${i.customer_name} <br>
-                            <span class="text-zinc-500 text-[10px]">Jenis: ${i.jenis_box}</span>
+                            <span class="text-cyan-400 font-bold font-mono text-[10px]">[${i.nama_item}]</span> ${i.customer} <br>
+                            <span class="text-zinc-500 text-[10px]">Jenis: ${i.jenis_barang}</span>
                         </td>
                         <td class="p-2 text-center">
                             <button onclick="hapusMasterItem(${i.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded cursor-pointer">
@@ -409,13 +382,13 @@
                     </tr>
                 `).join('');
 
-                // Render List Master Routing & Isi Dropdown Filter Unik Jenis Box
+                // Render List Master Routing
                 const tbodyRoute = document.getElementById('listMasterRouting');
                 tbodyRoute.innerHTML = dataMasterRouting.map(r => `
-                    <tr class="hover:bg-zinc-900/60">
-                        <td class="p-2 text-zinc-400">${r.jenis_box}</td>
+                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60">
+                        <td class="p-2 text-zinc-400">${r.jenis_barang}</td>
                         <td class="p-2 font-medium text-zinc-200">${r.nama_proses}</td>
-                        <td class="p-2 text-center font-mono text-amber-400 font-bold">${r.urutan_proses}</td>
+                        <td class="p-2 text-center font-mono text-amber-400 font-bold">${r.urutan_proses || 1}</td>
                         <td class="p-2 text-center">
                             <button onclick="hapusMasterRouting(${r.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded cursor-pointer">
                                 <span class="material-symbols-rounded text-sm block">delete</span>
@@ -424,9 +397,9 @@
                     </tr>
                 `).join('');
 
-                // Grouping Unik Jenis Box untuk form setting sebelah kanan
+                // Dropdown Jenis Box Unik untuk form setting kanan
                 const routeJenisSelect = document.getElementById('routeJenis');
-                const listJenisUnik = [...new Set(dataMasterItem.map(i => i.jenis_box))];
+                const listJenisUnik = [...new Set(dataMasterItem.map(i => i.jenis_barang))];
                 let opts = '<option value="">-- Pilih Jenis --</option>';
                 listJenisUnik.forEach(jb => {
                     opts += `<option value="${jb}">${jb}</option>`;
@@ -441,91 +414,139 @@
         // HANDLER SUBMIT: REGISTER ITEM BARU
         document.getElementById('formRegisterItem').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = {
-                customer_name: document.getElementById('regCustomer').value.toUpperCase(),
-                jenis_box: document.getElementById('regJenis').value.toUpperCase(),
-                kode_barang: document.getElementById('regKode').value.toUpperCase()
-            };
-            const res = await fetch(`${API_URL}/master-item`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-            if(res.ok) {
-                document.getElementById('formRegisterItem').reset();
-                loadConfigData();
+            const customer = document.getElementById('regCustomer').value.toUpperCase().trim();
+            const jenis_barang = document.getElementById('regJenis').value.toUpperCase().trim();
+            const nama_item = document.getElementById('regKode').value.toUpperCase().trim();
+
+            if(!customer || !jenis_barang || !nama_item) return alert('Lengkapi semua kolom!');
+
+            try {
+                const res = await fetch(`${API_URL}/master/item`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ customer, jenis_barang, nama_item })
+                });
+                
+                if(res.ok) {
+                    alert('➕ Item Baru Sukses Terdaftar!');
+                    document.getElementById('formRegisterItem').reset();
+                    await loadConfigData();
+                } else {
+                    alert('⚠️ Gagal mendaftarkan item, coba cek koneksi server.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('❌ Terjadi kesalahan jaringan!');
             }
         });
 
         // HANDLER SUBMIT: TAMBAH TAHAPAN PROSES (ROUTING)
         document.getElementById('formRouting').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = {
-                jenis_box: document.getElementById('routeJenis').value,
-                nama_proses: document.getElementById('routeNamaProses').value.toUpperCase(),
-                urutan_proses: parseInt(document.getElementById('routeUrutan').value)
-            };
-            const res = await fetch(`${API_URL}/master-routing`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-            if(res.ok) {
-                document.getElementById('formRouting').reset();
-                loadConfigData();
+            const jenis_barang = document.getElementById('routeJenis').value;
+            const nama_proses = document.getElementById('routeNamaProses').value.toUpperCase().trim();
+            const urutan_proses = parseInt(document.getElementById('routeUrutan').value);
+
+            if(!jenis_barang || !nama_proses || !urutan_proses) return alert('Lengkapi data alur proses!');
+
+            try {
+                const res = await fetch(`${API_URL}/master/proses`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ jenis_barang, nama_proses, urutan_proses })
+                });
+                
+                if(res.ok) {
+                    alert('⚙️ Alur Proses Berhasil Ditambahkan!');
+                    document.getElementById('formRouting').reset();
+                    await loadConfigData();
+                } else {
+                    alert('⚠️ Gagal menyimpan alur proses.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('❌ Terjadi kesalahan jaringan!');
             }
         });
 
         // HANDLER SUBMIT: INPUT PRODUKSI HARIAN
         document.getElementById('formProduksi').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = {
-                master_item_id: parseInt(document.getElementById('prodItem').value),
-                nama_proses: document.getElementById('prodProses').value,
-                qty_ok: parseInt(document.getElementById('prodQty').value)
-            };
-            const res = await fetch(`${API_URL}/produksi`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-            if(res.ok) {
-                document.getElementById('formProduksi').reset();
-                document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
-                loadDashboardData();
-                alert('🚀 Data produksi estafet berhasil terekam!');
+            const selectItem = document.getElementById('prodItem');
+            const selectedText = selectItem.options[selectItem.selectedIndex].text;
+            
+            const parts = selectedText.split(' | ');
+            if(parts.length < 3) return alert('Pilih item terlebih dahulu!');
+
+            const customer = parts[0];
+            const jenis_barang = parts[1];
+            const nama_item = parts[2];
+            const proses_sekarang = document.getElementById('prodProses').value;
+            const jumlah_ok = parseInt(document.getElementById('prodQty').value) || 0;
+            const jumlah_ng = 0; 
+
+            try {
+                const res = await fetch(`${API_URL}/produksi`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng })
+                });
+                
+                if(res.ok) {
+                    alert('🚀 Data produksi estafet berhasil terekam!');
+                    document.getElementById('formProduksi').reset();
+                    document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
+                    loadDashboardData();
+                }
+            } catch (err) {
+                console.error(err);
             }
         });
 
         // HANDLER SUBMIT: INPUT PENGIRIMAN SURAT JALAN
         document.getElementById('formDelivery').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = {
-                master_item_id: parseInt(document.getElementById('delItem').value),
-                no_surat_jalan: document.getElementById('delNoSj').value,
-                qty_kirim: parseInt(document.getElementById('delQty').value)
-            };
-            const res = await fetch(`${API_URL}/delivery`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-            if(res.ok) {
-                document.getElementById('formDelivery').reset();
-                loadDashboardData();
-                alert('🚚 Surat jalan terbit! Stok Gudang Jadi berhasil dipotong.');
-            } else {
-                const errResult = await res.json();
-                alert(`⚠️ Gagal Kirim: ${errResult.message || 'Stok tidak cukup!'}`);
+            const selectItem = document.getElementById('delItem');
+            const selectedText = selectItem.options[selectItem.selectedIndex].text;
+            
+            const parts = selectedText.split(' | ');
+            if(parts.length < 3) return alert('Pilih item terlebih dahulu!');
+
+            const customer = parts[0];
+            const jenis_barang = parts[1];
+            const nama_item = parts[2];
+            const no_surat_jalan = document.getElementById('delNoSj').value.trim();
+            const jumlah_kirim = parseInt(document.getElementById('delQty').value) || 0;
+
+            try {
+                const res = await fetch(`${API_URL}/delivery`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim })
+                });
+                
+                if(res.ok) {
+                    alert('🚚 Surat jalan terbit! Stok Gudang Jadi berhasil dipotong.');
+                    document.getElementById('formDelivery').reset();
+                    loadDashboardData();
+                } else {
+                    alert('⚠️ Gagal Kirim! Stok Gudang Jadi tidak mencukupi.');
+                }
+            } catch (err) {
+                console.error(err);
             }
         });
 
         // FUNGSI PENGHAPUSAN MASTER DATA VIA API
         async function hapusMasterItem(id) {
-            if(confirm('Hapus item ini? Semua histori transaksi item terkait akan ikut terhapus!')) {
-                await fetch(`${API_URL}/master-item/${id}`, { method: 'DELETE' });
+            if(confirm('Hapus item ini dari sistem?')) {
+                await fetch(`${API_URL}/master/item/${id}`, { method: 'DELETE' });
                 loadConfigData();
             }
         }
         async function hapusMasterRouting(id) {
             if(confirm('Hapus tahapan proses ini?')) {
-                await fetch(`${API_URL}/master-routing/${id}`, { method: 'DELETE' });
+                await fetch(`${API_URL}/master/proses/${id}`, { method: 'DELETE' });
                 loadConfigData();
             }
         }
