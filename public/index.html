@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MONITOR WIP CLOUD V3.6</title>
+    <title>MONITOR WIP CLOUD V3.7</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -27,7 +26,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">CYBER-WIP MOBILE</h1>
-                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Mobile Manufacturing Center v3.6</p>
+                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Mobile Manufacturing Center v3.7</p>
                 </div>
             </div>
             
@@ -106,44 +105,24 @@
             </section>
 
             <div class="flex flex-col gap-4">
-                <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-emerald-500 to-teal-500"></div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined text-emerald-400 text-xl">local_shipping</span>
-                        <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-300">Form Pengiriman (Outbound)</h2>
-                    </div>
-                    
-                    <form id="formDelivery" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Pilih Item Barang Jadi</label>
-                                <select id="delItem" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 transition-all"></select>
+                <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden flex flex-col justify-between h-full">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-500 to-orange-500"></div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="material-symbols-outlined text-amber-400 text-xl">sync_saved_locally</span>
+                            <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-300">Konsol Sinkronisasi Real-Time</h2>
+                        </div>
+                        <div class="bg-zinc-950 border border-zinc-900 rounded-xl p-4 space-y-3">
+                            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+                                <span class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> Cloud Connection Status
+                                </span>
+                                <span id="syncIndicator" class="text-[9px] text-zinc-400 uppercase font-bold bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Connecting...</span>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Nomor Surat Jalan (SJ)</label>
-                                <input type="text" id="delNoSj" required placeholder="Contoh: SJ/001/V/2026" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 transition-all">
+                            <div id="activityLogs" class="space-y-1 max-h-[110px] overflow-y-auto text-[11px] font-mono text-zinc-400">
+                                <div>[SYSTEM] Menghubungkan alamat database produksi...</div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Jumlah Dikirim (Pcs)</label>
-                            <div class="relative">
-                                <input type="number" id="delQty" required min="1" placeholder="Masukkan qty pengiriman" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-3 pr-10 py-2.5 text-xs text-zinc-200 font-medium focus:outline-none focus:border-emerald-500 transition-all">
-                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">PCS</span>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">local_shipping</span> Dispatch / Kurangi Gudang Jadi
-                        </button>
-                    </form>
-                </section>
-
-                <section class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex-1">
-                    <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
-                        <span class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Cloud Sync Status</span>
-                        <span id="syncIndicator" class="text-[9px] text-emerald-400 uppercase font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Sistem Siap Hubung Cloud</span>
-                    </div>
-                    <div id="activityLogs" class="space-y-1 max-h-[60px] overflow-y-auto text-[11px] font-mono text-zinc-500">
-                        <div>[SYSTEM] Menghubungkan alamat database baru...</div>
                     </div>
                 </section>
             </div>
@@ -153,7 +132,7 @@
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-3">
                     <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
                         <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-200">1. Real-Time Monitor Antrean WIP Aktif</h2>
                     </div>
                 </div>
@@ -197,9 +176,9 @@
 
     <script>
         // =================================================================
-        // DUA DATA SINKRONISASI KAMU SUDAH TERKUNCI SEMPURNA DI SINI, GAES!
+        // CREDENTIAL RESMI MENGIKUTI HASIL SCAN FOTO KAMU
         // =================================================================
-        const SUPABASE_ANON_KEY = "sb_publishable_LWRcq8BpbjsH0obhPvVYuA_7oNJ02HI";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0MTcwMTAsImV4cCI6MjA2NDAwOTAxMH0.P1WunUf_lWb-Y4w7eP8-oA6uB8O74zU0eGkYv2X-A9E"; 
         const SUPABASE_URL = "https://banxtubpdekpdajadupz.supabase.co"; 
         // =================================================================
 
@@ -249,13 +228,13 @@
                 let items, proses;
                 try {
                     items = await supabaseFetch('master_items');
-                    proses = await supabaseFetch('master_routing');
+                    proses = await supabaseFetch('master_proses');
                     saveToLocalBackup('items', items);
                     saveToLocalBackup('proses', proses);
                     document.getElementById('syncIndicator').className = "text-[9px] text-emerald-400 uppercase font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
                     document.getElementById('syncIndicator').innerText = "Cloud Online Sync ON";
                 } catch (e) {
-                    addLog("⚠️ Koneksi Offline. Membaca data backup HP.");
+                    addLog("⚠️ Koneksi Cloud Gagal. Membaca data backup HP.");
                     items = getLocalBackup('items') || [];
                     proses = getLocalBackup('proses') || [];
                     document.getElementById('syncIndicator').className = "text-[9px] text-amber-400 uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20";
@@ -272,18 +251,13 @@
                 prodCust.innerHTML = custHtml;
 
                 try {
-                    currentWipState = await supabaseFetch('transaksi_wip', 'GET', null, '?select=*&order=id.desc');
+                    currentWipState = await supabaseFetch('produksi', 'GET', null, '?select=*&order=id.desc');
                     saveToLocalBackup('wip', currentWipState);
                 } catch(e) {
                     currentWipState = getLocalBackup('wip') || [];
                 }
 
                 renderWipTable(currentWipState);
-
-                const delSelect = document.getElementById('delItem');
-                let optDel = '<option value="">-- Pilih Item --</option>';
-                dataMasterItem.forEach(it => { optDel += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`; });
-                delSelect.innerHTML = optDel;
 
             } catch (err) { console.error(err); }
         }
@@ -335,8 +309,8 @@
                     <td class="px-4 py-3 text-zinc-400">${w.jenis_barang.includes(' - ') ? w.jenis_barang.split(' - ')[1] : w.jenis_barang}</td>
                     <td class="px-4 py-3 font-mono text-zinc-400">${w.nama_item}</td>
                     <td class="px-4 py-3 text-center text-zinc-400">${w.shift_kerja || "Shift 1"}</td>
-                    <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-[10px] font-bold uppercase">${w.proses_sekarang}</span></td>
-                    <td class="px-5 py-3 text-right font-mono font-bold text-amber-400">${Number(w.sisa_wip).toLocaleString('id-ID')}</td>
+                    <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full text-[10px] font-bold uppercase">${w.proses_sekarang}</span></td>
+                    <td class="px-5 py-3 text-right font-mono font-bold text-cyan-400">${Number(w.sisa_wip).toLocaleString('id-ID')}</td>
                 </tr>
             `).join('');
         }
@@ -359,13 +333,13 @@
             renderWipTable(currentWipState);
 
             try {
-                await supabaseFetch('transaksi_wip', 'POST', payload);
+                await supabaseFetch('produksi', 'POST', payload);
                 addLog(`✅ Saved Cloud & Local: ${nama_item}`);
-                alert('🚀 Sukses! Data aman di Cloud & Backup HP!');
+                alert('🚀 Sukses! Data masuk Cloud & ter-backup di HP!');
                 document.getElementById('formProduksi').reset();
                 loadDashboardData();
             } catch (err) {
-                addLog(`⚠️ Internet Drop! Tersimpan di internal HP.`);
+                addLog(`⚠️ Internet Drop! Tersimpan lokal.`);
             }
         });
 
@@ -387,14 +361,14 @@
                 document.getElementById('formRegisterItem').reset();
                 loadConfigData();
             } catch(err) {
-                alert('⚠️ Offline: Disimpan sementara di HP.');
+                alert('⚠️ Offline: Disimpan di HP.');
             }
         });
 
         async function loadConfigData() {
             try {
                 dataMasterItem = await supabaseFetch('master_items');
-                dataMasterRouting = await supabaseFetch('master_routing');
+                dataMasterRouting = await supabaseFetch('master_proses');
                 saveToLocalBackup('items', dataMasterItem);
                 saveToLocalBackup('proses', dataMasterRouting);
             } catch (e) {
