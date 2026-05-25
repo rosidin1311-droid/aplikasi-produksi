@@ -552,17 +552,22 @@
         });
 
         // FORM DELIVERY SUBMIT
-        document.getElementById('formDelivery').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const selectItem = document.getElementById('delItem');
-            const selectedText = selectItem.options[selectItem.selectedIndex].text;
-            const parts = selectedText.split(' | ');
-            const customer = parts[0];
-            const jenis_barang = `${customer} - ${parts[1]}`;
-            const nama_item = parts[2];
-            const no_surat_jalan = document.getElementById('delNoSj').value.trim();
-            const jumlah_kirim = parseInt(document.getElementById('delQty').value) || 0;
-
+        <form id="formDelivery" class="space-y-4">
+    <div class="grid grid-cols-1 gap-4">
+        <select id="delCust" onchange="updateDelJenis()" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200">
+            <option value="">-- Pilih Customer --</option>
+        </select>
+        <select id="delJenis" disabled onchange="updateDelItem()" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200">
+            <option value="">-- Pilih Jenis --</option>
+        </select>
+        <select id="delItem" disabled class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200">
+            <option value="">-- Pilih Item --</option>
+        </select>
+        <input type="text" id="delNoSj" required placeholder="Nomor Surat Jalan" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200">
+        <input type="number" id="delQty" required placeholder="Jumlah Dikirim" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200">
+    </div>
+    <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl">Dispatch ke Gudang</button>
+</form>
             const matchGudang = currentGudangState.find(g => g.customer === customer && g.nama_item === nama_item);
             const totalReadyStock = matchGudang ? parseInt(matchGudang.stok_jadi || matchGudang.stok_ready || 0) : 0;
 
@@ -600,7 +605,7 @@
                     });
                     addLog(`🛠️ Koreksi WIP: ${nama_item} (${proses}) set manual ke ${saldoBaru}`);
                     alert('✅ Saldo Antrean WIP dikoreksi!');
-                    loadDashboardData();
+                    loadDashboardData();initDelDropdowns(); 
                 } catch(e) { console.error(e); }
             } else {
                 try {
@@ -657,7 +662,28 @@
             XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
 
-        window.onload = loadDashboardData;
+        window.onload = loadDashboardData;function initDelDropdowns() {
+    const delCust = document.getElementById('delCust');
+    const uniqueCust = [...new Set(dataMasterItem.map(i => i.customer))];
+    delCust.innerHTML = '<option value="">-- Pilih Customer --</option>' + uniqueCust.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function updateDelJenis() {
+    const cust = document.getElementById('delCust').value;
+    const selectJenis = document.getElementById('delJenis');
+    const uniqueJenis = [...new Set(dataMasterItem.filter(i => i.customer === cust).map(i => i.jenis_barang))];
+    selectJenis.innerHTML = '<option value="">-- Pilih Jenis --</option>' + uniqueJenis.map(j => `<option value="${j}">${j}</option>`).join('');
+    selectJenis.disabled = false;
+}
+
+function updateDelItem() {
+    const cust = document.getElementById('delCust').value;
+    const jenis = document.getElementById('delJenis').value;
+    const selectItem = document.getElementById('delItem');
+    const items = dataMasterItem.filter(i => i.customer === cust && i.jenis_barang === jenis);
+    selectItem.innerHTML = '<option value="">-- Pilih Item --</option>' + items.map(i => `<option value="${i.nama_item}">${i.nama_item}</option>`).join('');
+    selectItem.disabled = false;
+}
     </script>
 </body>
 </html>
