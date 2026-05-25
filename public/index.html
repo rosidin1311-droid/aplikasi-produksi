@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MONITOR WIP CLOUD V3.7</title>
+    <title>MONITOR WIP CLOUD V3.8</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +26,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">CYBER-WIP MOBILE</h1>
-                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Mobile Manufacturing Center v3.7</p>
+                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Mobile Manufacturing Center v3.8</p>
                 </div>
             </div>
             
@@ -175,12 +175,8 @@
     </div>
 
     <script>
-        // =================================================================
-        // CREDENTIAL RESMI MENGIKUTI HASIL SCAN FOTO KAMU
-        // =================================================================
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0MTcwMTAsImV4cCI6MjA2NDAwOTAxMH0.P1WunUf_lWb-Y4w7eP8-oA6uB8O74zU0eGkYv2X-A9E"; 
         const SUPABASE_URL = "https://banxtubpdekpdajadupz.supabase.co"; 
-        // =================================================================
 
         let dataMasterItem = [];
         let dataMasterRouting = [];
@@ -225,16 +221,16 @@
 
         async function loadDashboardData() {
             try {
-                let items, proses;
+                let items = [], proses = [];
                 try {
-                    items = await supabaseFetch('master_items');
-                    proses = await supabaseFetch('master_proses');
+                    items = await supabaseFetch('master_items') || [];
+                    proses = await supabaseFetch('master_proses') || [];
                     saveToLocalBackup('items', items);
                     saveToLocalBackup('proses', proses);
                     document.getElementById('syncIndicator').className = "text-[9px] text-emerald-400 uppercase font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
                     document.getElementById('syncIndicator').innerText = "Cloud Online Sync ON";
                 } catch (e) {
-                    addLog("⚠️ Koneksi Cloud Gagal. Membaca data backup HP.");
+                    addLog("⚠️ Mode Offline Aktif. Membaca data backup HP.");
                     items = getLocalBackup('items') || [];
                     proses = getLocalBackup('proses') || [];
                     document.getElementById('syncIndicator').className = "text-[9px] text-amber-400 uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20";
@@ -245,13 +241,13 @@
                 dataMasterRouting = proses;
                 
                 const prodCust = document.getElementById('prodCust');
-                const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
+                const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer).filter(Boolean))];
                 let custHtml = '<option value="">-- Pilih Customer --</option>';
                 uniqueCustomers.forEach(cust => { custHtml += `<option value="${cust}">${cust}</option>`; });
                 prodCust.innerHTML = custHtml;
 
                 try {
-                    currentWipState = await supabaseFetch('produksi', 'GET', null, '?select=*&order=id.desc');
+                    currentWipState = await supabaseFetch('produksi', 'GET', null, '?select=*&order=id.desc') || [];
                     saveToLocalBackup('wip', currentWipState);
                 } catch(e) {
                     currentWipState = getLocalBackup('wip') || [];
@@ -273,7 +269,7 @@
 
             if(!custSelected) { selectJenis.disabled = true; return; }
             const filteredItems = dataMasterItem.filter(i => i.customer === custSelected);
-            const uniqueJenis = [...new Set(filteredItems.map(i => i.jenis_barang))];
+            const uniqueJenis = [...new Set(filteredItems.map(i => i.jenis_barang).filter(Boolean))];
             uniqueJenis.forEach(j => { selectJenis.innerHTML += `<option value="${j}">${j}</option>`; });
             selectJenis.disabled = false;
         }
@@ -294,25 +290,44 @@
 
             const targetKey = `${custSelected} - ${jenisSelected}`;
             const filteredRouting = dataMasterRouting.filter(r => r.jenis_barang === targetKey || r.jenis_barang === jenisSelected);
+            
             if(filteredRouting.length === 0) {
                 selectProses.innerHTML = '<option value="">⚠️ Alur Belum Diatur!</option>';
             } else {
-                filteredRouting.sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
-                filteredRouting.forEach(r => { selectProses.innerHTML += `<option value="${r.nama_proses}">Urutan ${r.urutan_proses}: ${r.nama_proses}</option>`; });
+                filteredRouting.sort((a,b) => {
+                    let orderA = a.urutan_proses || a.urutan || 0;
+                    let orderB = b.urutan_proses || b.urutan || 0;
+                    return orderA - orderB;
+                });
+                filteredRouting.forEach(r => { 
+                    let procName = r.nama_proses || r.proses || "Proses";
+                    let procOrder = r.urutan_proses || r.urutan || 1;
+                    selectProses.innerHTML += `<option value="${procName}">Urutan ${procOrder}: ${procName}</option>`; 
+                });
             }
         }
 
         function renderWipTable(data) {
-            document.getElementById('tabelWip').innerHTML = data.map(w => `
-                <tr class="hover:bg-zinc-900/40">
-                    <td class="px-5 py-3 font-medium text-zinc-300">${w.customer}</td>
-                    <td class="px-4 py-3 text-zinc-400">${w.jenis_barang.includes(' - ') ? w.jenis_barang.split(' - ')[1] : w.jenis_barang}</td>
-                    <td class="px-4 py-3 font-mono text-zinc-400">${w.nama_item}</td>
-                    <td class="px-4 py-3 text-center text-zinc-400">${w.shift_kerja || "Shift 1"}</td>
-                    <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full text-[10px] font-bold uppercase">${w.proses_sekarang}</span></td>
-                    <td class="px-5 py-3 text-right font-mono font-bold text-cyan-400">${Number(w.sisa_wip).toLocaleString('id-ID')}</td>
-                </tr>
-            `).join('');
+            document.getElementById('tabelWip').innerHTML = data.map(w => {
+                let cust = w.customer || "-";
+                let jns = w.jenis_barang || "-";
+                if(jns.includes(' - ')) jns = jns.split(' - ')[1];
+                let itm = w.nama_item || w.item || "-";
+                let shf = w.shift_kerja || w.shift || "Shift 1";
+                let prs = w.proses_sekarang || w.proses || "WIP";
+                let qty = w.sisa_wip || w.jumlah_ok || w.qty || 0;
+
+                return `
+                    <tr class="hover:bg-zinc-900/40">
+                        <td class="px-5 py-3 font-medium text-zinc-300">${cust}</td>
+                        <td class="px-4 py-3 text-zinc-400">${jns}</td>
+                        <td class="px-4 py-3 font-mono text-zinc-400">${itm}</td>
+                        <td class="px-4 py-3 text-center text-zinc-400">${shf}</td>
+                        <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full text-[10px] font-bold uppercase">${prs}</span></td>
+                        <td class="px-5 py-3 text-right font-mono font-bold text-cyan-400">${Number(qty).toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         document.getElementById('formProduksi').addEventListener('submit', async (e) => {
@@ -335,11 +350,11 @@
             try {
                 await supabaseFetch('produksi', 'POST', payload);
                 addLog(`✅ Saved Cloud & Local: ${nama_item}`);
-                alert('🚀 Sukses! Data masuk Cloud & ter-backup di HP!');
+                alert('🚀 Sukses! Data aman di Cloud!');
                 document.getElementById('formProduksi').reset();
                 loadDashboardData();
             } catch (err) {
-                addLog(`⚠️ Internet Drop! Tersimpan lokal.`);
+                addLog(`⚠️ Internet Drop! Tersimpan lokal di HP.`);
             }
         });
 
@@ -365,10 +380,32 @@
             }
         });
 
+        document.getElementById('formRouting').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const jenis_barang = document.getElementById('routeJenis').value;
+            const nama_proses = document.getElementById('routeNamaProses').value.toUpperCase().trim();
+            const urutan_proses = parseInt(document.getElementById('routeUrutan').value) || 1;
+
+            const payload = { jenis_barang, nama_proses, urutan_proses };
+
+            dataMasterRouting.push(payload);
+            saveToLocalBackup('proses', dataMasterRouting);
+            loadConfigData();
+
+            try {
+                await supabaseFetch('master_proses', 'POST', payload);
+                alert(`🌿 Alur ${nama_proses} Berhasil masuk Cloud!`);
+                document.getElementById('formRouting').reset();
+                loadConfigData();
+            } catch(err) {
+                alert('⚠️ Offline: Disimpan di HP.');
+            }
+        });
+
         async function loadConfigData() {
             try {
-                dataMasterItem = await supabaseFetch('master_items');
-                dataMasterRouting = await supabaseFetch('master_proses');
+                dataMasterItem = await supabaseFetch('master_items') || [];
+                dataMasterRouting = await supabaseFetch('master_proses') || [];
                 saveToLocalBackup('items', dataMasterItem);
                 saveToLocalBackup('proses', dataMasterRouting);
             } catch (e) {
@@ -376,13 +413,27 @@
                 dataMasterRouting = getLocalBackup('proses') || [];
             }
 
-            document.getElementById('listMasterItem').innerHTML = dataMasterItem.map(i => `
-                <tr class="border-b border-zinc-800/40"><td class="p-2 font-medium text-zinc-300"><span class="text-cyan-400 font-bold">[${i.nama_item}]</span> ${i.customer}<br><span class="text-zinc-500 text-[10px]">Jenis: ${i.jenis_barang}</span></td></tr>
-            `).join('');
+            document.getElementById('listMasterItem').innerHTML = dataMasterItem.map(i => {
+                let name = i.nama_item || i.item || "-";
+                let cust = i.customer || "-";
+                let jns = i.jenis_barang || "-";
+                return `<tr class="border-b border-zinc-800/40"><td class="p-2 font-medium text-zinc-300"><span class="text-cyan-400 font-bold">[${name}]</span> ${cust}<br><span class="text-zinc-500 text-[10px]">Jenis: ${jns}</span></td></tr>`;
+            }).join('');
+
+            document.getElementById('listMasterRouting').innerHTML = dataMasterRouting.map(r => {
+                let jns = r.jenis_barang || "-";
+                let proc = r.nama_proses || r.proses || "-";
+                let ord = r.urutan_proses || r.urutan || 1;
+                return `<tr class="border-b border-zinc-800/40"><td class="p-2 text-zinc-400 truncate max-w-[120px]">${jns}</td><td class="p-2 font-medium text-zinc-300">${proc}</td><td class="p-2 text-center text-cyan-400 font-bold">${ord}</td></tr>`;
+            }).join('');
 
             const routeJenisSelect = document.getElementById('routeJenis');
             let opts = '<option value="">-- Pilih Item --</option>';
-            dataMasterItem.forEach(i => { opts += `<option value="${i.customer} - ${i.jenis_barang}">${i.customer} (${i.jenis_barang})</option>`; });
+            dataMasterItem.forEach(i => { 
+                let cust = i.customer || "-";
+                let jns = i.jenis_barang || "-";
+                opts += `<option value="${cust} - ${jns}">${cust} (${jns})</option>`; 
+            });
             routeJenisSelect.innerHTML = opts;
         }
 
