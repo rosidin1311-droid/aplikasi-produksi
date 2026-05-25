@@ -3,80 +3,660 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MONITOR WIP CLOUD V3.9</title>
+    <title>MONITOR WIP MANUFAKTUR V3.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
     </style>
 </head>
-<body class="bg-neutral-950 text-zinc-100 min-h-screen">
+<body class="bg-neutral-950 text-zinc-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-neutral-950">
 
-    <!-- Header & UI sama seperti sebelumnya -->
-    <header class="border-b border-zinc-800 bg-neutral-950/80 p-4 sticky top-0 z-40">
-        <h1 class="text-lg font-bold">CYBER-WIP MOBILE V3.9</h1>
+    <header class="border-b border-zinc-800/60 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                    <span class="material-symbols-outlined text-neutral-950 font-bold block">precision_manufacturing</span>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">CYBER-WIP MONITOR</h1>
+                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Manufacturing Control Center v3.2</p>
+                </div>
+            </div>
+            
+            <button onclick="toggleModal(true)" class="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-800 text-amber-400 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer shadow-sm">
+                <span class="material-symbols-outlined text-sm">settings_accessibility</span>
+                ⚙️ Pengaturan Data
+            </button>
+        </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <!-- Form dan Tabel -->
-        <section class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-            <div id="syncIndicator" class="text-[10px] font-bold text-amber-400">Connecting...</div>
-        </section>
-        <table class="w-full text-left text-xs border-collapse">
-            <thead class="text-zinc-400 uppercase border-b border-zinc-800">
-                <tr><th class="p-3">Customer</th><th class="p-3">Item</th><th class="p-3">WIP</th><th class="p-3">Qty</th></tr>
-            </thead>
-            <tbody id="tabelWip" class="divide-y divide-zinc-800"></tbody>
-        </table>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-cyan-500 to-blue-500"></div>
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-cyan-400 text-xl">token</span>
+                        <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-300">Form Input Hasil Kerja</h2>
+                    </div>
+                    
+                    <form id="formProduksi" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">1. Pilih Customer</label>
+                                <select id="prodCust" required onchange="updateDropdownJenis()" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Customer --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Shift Kerja</label>
+                                <select id="prodShift" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="Shift 1">Shift 1</option>
+                                    <option value="Shift 2">Shift 2</option>
+                                    <option value="Shift 3">Shift 3</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">2. Pilih Jenis Barang/Box</label>
+                                <select id="prodJenis" required disabled onchange="updateDropdownItem()" class="w-full bg-zinc-950 border border-zinc-800 disabled:opacity-40 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Jenis --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">3. Pilih Kode / Part Number</label>
+                                <select id="prodItem" required disabled class="w-full bg-zinc-950 border border-zinc-800 disabled:opacity-40 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Kode Item --</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">4. Stasiun Kerja / Proses</label>
+                                <select id="prodProses" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Proses --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Jumlah Produk OK (Pcs)</label>
+                                    <span id="infoWipMaks" class="text-[10px] text-amber-400 font-medium hidden">Maks: <b id="valWipMaks">0</b></span>
+                                </div>
+                                <div class="relative">
+                                    <input type="number" id="prodQty" required min="1" placeholder="Qty lulus" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-3 pr-10 py-2.5 text-xs text-zinc-200 font-medium focus:outline-none focus:border-cyan-500 transition-all">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">PCS</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] flex items-center justify-center gap-2 cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">send_and_archive</span> Submit Ke Lantai Kerja
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <div class="flex flex-col gap-4">
+                <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-emerald-500 to-teal-500"></div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-emerald-400 text-xl">local_shipping</span>
+                        <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-300">Form Pengiriman (Outbound)</h2>
+                    </div>
+                    
+                    <form id="formDelivery" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Pilih Item Barang Jadi</label>
+                                <select id="delItem" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 transition-all"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Nomor Surat Jalan (SJ)</label>
+                                <input type="text" id="delNoSj" required placeholder="Contoh: SJ/001/V/2026" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Jumlah Dikirim (Pcs)</label>
+                                <span id="infoGudangMaks" class="text-[10px] text-emerald-400 font-medium hidden">Maks Ready Gudang: <b id="valGudangMaks">0</b> Pcs</span>
+                            </div>
+                            <div class="relative">
+                                <input type="number" id="delQty" required min="1" placeholder="Masukkan qty pengiriman" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-3 pr-10 py-2.5 text-xs text-zinc-200 font-medium focus:outline-none focus:border-emerald-500 transition-all">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">PCS</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2 cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">local_shipping</span> Dispatch / Kurangi Gudang Jadi
+                        </button>
+                    </form>
+                </section>
+
+                <section class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex-1">
+                    <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
+                        <span class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> Live Activity Log</span>
+                        <button onclick="clearFrontendLogs()" class="text-[9px] text-zinc-600 hover:text-zinc-400 uppercase font-semibold">Clear</button>
+                    </div>
+                    <div id="activityLogs" class="space-y-1 max-h-[60px] overflow-y-auto text-[11px] font-mono text-zinc-500">
+                        <div>[SYSTEM] Menunggu instruksi transaksi baru...</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+            <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
+                <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-200">1. Real-Time Monitor Antrean WIP Aktif</h2>
+                    </div>
+                    <div class="flex items-center gap-3 flex-1 sm:flex-initial justify-end">
+                        <div class="relative w-full sm:w-60">
+                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500">search</span>
+                            <input type="text" id="searchWip" oninput="filterTabelWip()" placeholder="Cari Customer / Part Number..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1 text-xs focus:outline-none focus:border-amber-500 text-zinc-200">
+                        </div>
+                        <button onclick="exportTableToExcel('tabelWip', 'Live-Antrean-WIP')" class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-300 hover:text-amber-400 text-[11px] font-semibold rounded-lg transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-xs">download</span> Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-wider bg-zinc-950/40">
+                                <th class="px-5 py-3">Nama Customer</th>
+                                <th class="px-4 py-3">Jenis Item</th>
+                                <th class="px-4 py-3">Kode/Part Number</th>
+                                <th class="px-4 py-3 text-center">Shift Input</th>
+                                <th class="px-4 py-3 text-center">Posisi Mesin / WIP</th>
+                                <th class="px-5 py-3 text-right">Sisa Stok (Pcs)</th>
+                                <th class="px-4 py-3 text-center w-24">Aksi Koreksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelWip" class="text-xs divide-y divide-zinc-800/40"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
+                <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <h2 class="text-sm font-bold tracking-wide uppercase text-zinc-200">2. Saldo Gudang Barang Jadi (Ready Stock)</h2>
+                    </div>
+                    <div class="flex items-center gap-3 flex-1 sm:flex-initial justify-end">
+                        <div class="relative w-full sm:w-60">
+                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500">search</span>
+                            <input type="text" id="searchGudang" oninput="filterTabelGudang()" placeholder="Cari Customer / Part Number..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1 text-xs focus:outline-none focus:border-emerald-500 text-zinc-200">
+                        </div>
+                        <button onclick="exportTableToExcel('tabelGudang', 'Saldo-Gudang-Jadi')" class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 hover:border-emerald-500 text-zinc-300 hover:text-emerald-400 text-[11px] font-semibold rounded-lg transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-xs">download</span> Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-wider bg-zinc-950/40">
+                                <th class="px-5 py-3">Nama Customer</th>
+                                <th class="px-4 py-3">Jenis Item</th>
+                                <th class="px-4 py-3">Kode/Part Number</th>
+                                <th class="px-4 py-3 text-center">Shift Masuk</th>
+                                <th class="px-5 py-3 text-right">Ready Dikirim (Pcs)</th>
+                                <th class="px-4 py-3 text-center w-24">Aksi Koreksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelGudang" class="text-xs divide-y divide-zinc-800/40"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
     </main>
 
-    <script>
-        // KUNCI ANON KEY YANG BENAR DIMASUKKAN DI SINI
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o"; 
-        const SUPABASE_URL = "https://banxtubpdekpdajadupz.supabase.co"; 
+    <div id="configModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative space-y-6">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-400">tune</span>
+                    <h3 class="font-bold text-sm tracking-wide text-zinc-100 uppercase">Configuration Hub (Master Data)</h3>
+                </div>
+                <button onclick="toggleModal(false)" class="text-zinc-400 hover:text-zinc-100 p-1 hover:bg-zinc-800 rounded-lg transition-all cursor-pointer">
+                    <span class="material-symbols-outlined block">close</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
+                    <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+                        <span class="material-symbols-outlined text-sm text-cyan-400">add_box</span> Register Item Baru
+                    </h4>
+                    <form id="formRegisterItem" class="space-y-3">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Nama Customer</label>
+                            <input type="text" id="regCustomer" required placeholder="Contoh: PT. SAMINDO" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Jenis Box/Barang</label>
+                            <input type="text" id="regJenis" required placeholder="Contoh: MASTER BOX" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Kode Barang / Part Number</label>
+                            <input type="text" id="regKode" required placeholder="Contoh: M-00616" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer">Daftarkan Item Ke Sistem</button>
+                    </form>
+                    <div class="mt-4 border-t border-zinc-800/80 pt-3">
+                        <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
+                            <table class="w-full text-left text-[11px]">
+                                <thead class="bg-zinc-900 text-zinc-400 sticky top-0 font-bold"><tr><th class="p-2">Item/Customer</th><th class="p-2 text-center w-12">Aksi</th></tr></thead>
+                                <tbody id="listMasterItem" class="divide-y divide-zinc-800/60"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
+                    <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+                        <span class="material-symbols-outlined text-sm text-amber-400">account_tree</span> Atur Tahapan Alur Proses (Routing)
+                    </h4>
+                    <form id="formRouting" class="space-y-3">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Pilih Spesifik Item / Customer</label>
+                            <select id="routeJenis" required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+                                <option value="">-- Pilih Item --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Nama Proses Kerja</label>
+                            <input type="text" id="routeNamaProses" required placeholder="Contoh: FLEXO, LEM" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">No Urutan Jalur Kerja</label>
+                            <input type="number" id="routeUrutan" required min="1" placeholder="Misal: 1, 2" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer">Simpan Urutan Alur</button>
+                    </form>
+                    <div class="mt-4 border-t border-zinc-800/80 pt-3">
+                        <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
+                            <table class="w-full text-left text-[11px]">
+                                <thead class="bg-zinc-900 text-zinc-400 sticky top-0 font-bold"><tr><th class="p-2">Target / Jenis</th><th class="p-2">Proses</th><th class="p-2 text-center w-10">Urut</th><th class="p-2 text-center w-10">Hapus</th></tr></thead>
+                                <tbody id="listMasterRouting" class="divide-y divide-zinc-800/60"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        async function supabaseFetch(table, method = 'GET', body = null, queryParams = '') {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${queryParams}`, {
-                method,
-                headers: { 
-                    "apikey": SUPABASE_ANON_KEY, 
-                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, 
-                    "Content-Type": "application/json", 
-                    "Prefer": method === 'POST' ? "return=representation" : "" 
-                },
-                body: body ? JSON.stringify(body) : null
-            });
-            if (!res.ok) throw new Error(`Supabase Error: ${res.statusText}`);
-            return res.json();
+    <script>
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000/api'
+            : window.location.origin + '/api';
+
+        let dataMasterItem = [];
+        let dataMasterRouting = [];
+        let currentWipState = [];
+        let currentGudangState = [];
+
+        function addLog(message) {
+            const container = document.getElementById('activityLogs');
+            const time = new Date().toLocaleTimeString('id-ID');
+            container.innerHTML = `<div>[${time}] ${message}</div>` + container.innerHTML;
+        }
+
+        function clearFrontendLogs() { document.getElementById('activityLogs').innerHTML = '<div>[SYSTEM] Log dibersihkan.</div>'; }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('configModal');
+            if(show) { modal.classList.remove('hidden'); loadConfigData(); } 
+            else { modal.classList.add('hidden'); loadDashboardData(); }
         }
 
         async function loadDashboardData() {
             try {
-                const indicator = document.getElementById('syncIndicator');
-                indicator.innerText = "Syncing with Cloud...";
+                const r = await fetch(`${API_URL}/master`);
+                const d = await r.json();
+                dataMasterItem = d.items || [];
+                dataMasterRouting = d.proses || [];
                 
-                // Mengambil data produksi
-                const wipData = await supabaseFetch('produksi', 'GET', null, '?select=*&order=id.desc');
+                // ISI DROPDOWN UTAMA: PILIH CUSTOMER (DI-UNIQUISASI AGAR TIDAK DOUBLE)
+                const prodCust = document.getElementById('prodCust');
+                const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
                 
-                // Render ke tabel
-                const tbody = document.getElementById('tabelWip');
-                tbody.innerHTML = wipData.map(w => `
-                    <tr class="hover:bg-zinc-800">
-                        <td class="p-3">${w.customer || '-'}</td>
-                        <td class="p-3">${w.nama_item || '-'}</td>
-                        <td class="p-3">${w.proses_sekarang || '-'}</td>
-                        <td class="p-3 font-bold text-cyan-400">${w.sisa_wip || 0}</td>
-                    </tr>
-                `).join('');
-                
-                indicator.innerText = "CLOUD SYNCED (ONLINE)";
-                indicator.className = "text-[10px] font-bold text-emerald-400";
-            } catch(e) {
-                console.error(e);
-                document.getElementById('syncIndicator').innerText = "ERROR: " + e.message;
+                let custHtml = '<option value="">-- Pilih Customer --</option>';
+                uniqueCustomers.forEach(cust => {
+                    custHtml += `<option value="${cust}">${cust}</option>`;
+                });
+                prodCust.innerHTML = custHtml;
+
+                // Reset Dropdown turunan lainnya bawaan awal
+                document.getElementById('prodJenis').innerHTML = '<option value="">-- Pilih Jenis --</option>';
+                document.getElementById('prodJenis').disabled = true;
+                document.getElementById('prodItem').innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+                document.getElementById('prodItem').disabled = true;
+                document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
+
+                // Dropdown Form Delivery (Biarkan bawaan/gabungan karena outbound biasanya cepat pakai search)
+                const delSelect = document.getElementById('delItem');
+                let optDel = '<option value="">-- Pilih Item --</option>';
+                dataMasterItem.forEach(it => { optDel += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`; });
+                delSelect.innerHTML = optDel;
+
+                const resWip = await fetch(`${API_URL}/wip`);
+                const resData = await resWip.json();
+                currentWipState = resData.wip || [];
+                currentGudangState = resData.gudang || [];
+
+                renderWipTable(currentWipState);
+                renderGudangTable(currentGudangState);
+            } catch (err) { console.error(err); }
+        }
+
+        // TRIGGER DROPDOWN TIER 2: JENIS BARANG
+        function updateDropdownJenis() {
+            const custSelected = document.getElementById('prodCust').value;
+            const selectJenis = document.getElementById('prodJenis');
+            const selectItem = document.getElementById('prodItem');
+            
+            selectJenis.innerHTML = '<option value="">-- Pilih Jenis --</option>';
+            selectItem.innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+            selectItem.disabled = true;
+            document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
+
+            if(!custSelected) { selectJenis.disabled = true; return; }
+
+            const filteredItems = dataMasterItem.filter(i => i.customer === custSelected);
+            const uniqueJenis = [...new Set(filteredItems.map(i => i.jenis_barang))];
+
+            uniqueJenis.forEach(j => { selectJenis.innerHTML += `<option value="${j}">${j}</option>`; });
+            selectJenis.disabled = false;
+        }
+
+        // TRIGGER DROPDOWN TIER 3: KODE/PART NUMBER & PROSES ROUTINGNYA
+        function updateDropdownItem() {
+            const custSelected = document.getElementById('prodCust').value;
+            const jenisSelected = document.getElementById('prodJenis').value;
+            const selectItem = document.getElementById('prodItem');
+            const selectProses = document.getElementById('prodProses');
+
+            selectItem.innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+            selectProses.innerHTML = '<option value="">-- Pilih Proses --</option>';
+
+            if(!jenisSelected) { selectItem.disabled = true; return; }
+
+            const filteredItems = dataMasterItem.filter(i => i.customer === custSelected && i.jenis_barang === jenisSelected);
+            filteredItems.forEach(i => { selectItem.innerHTML += `<option value="${i.id}">${i.nama_item}</option>`; });
+            selectItem.disabled = false;
+
+            // BIND AMBIL ALUR PROSES LANGSUNG BERDASARKAN KOMBINASI TARGET ROUTINGNYA
+            const targetKey = `${custSelected} - ${jenisSelected}`;
+            const filteredRouting = dataMasterRouting.filter(r => r.jenis_barang === targetKey || r.jenis_barang === jenisSelected);
+            
+            if(filteredRouting.length === 0) {
+                selectProses.innerHTML = '<option value="">⚠️ Alur Belum Diatur!</option>';
+            } else {
+                filteredRouting.sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
+                filteredRouting.forEach(r => {
+                    selectProses.innerHTML += `<option value="${r.nama_proses}">Urutan ${r.urutan_proses || 1}: ${r.nama_proses}</option>`;
+                });
             }
         }
-        
+
+        function renderWipTable(data) {
+            const tbodyWip = document.getElementById('tabelWip');
+            if(data.length === 0) {
+                tbodyWip.innerHTML = `<tr><td colspan="7" class="px-5 py-8 text-center text-zinc-500 font-medium">✨ Lantai Produksi Bersih! Tidak ada antrean sisa WIP.</td></tr>`;
+                return;
+            }
+            tbodyWip.innerHTML = data.map(w => {
+                let displayJenis = w.jenis_barang;
+                if(displayJenis.includes(' - ')) displayJenis = displayJenis.split(' - ')[1];
+                return `
+                    <tr class="hover:bg-zinc-900/40 transition-colors">
+                        <td class="px-5 py-3.5 font-medium text-zinc-300">${w.customer}</td>
+                        <td class="px-4 py-3.5 text-zinc-400">${displayJenis}</td>
+                        <td class="px-4 py-3.5 font-mono text-zinc-400">${w.nama_item}</td>
+                        <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${w.shift_kerja || "Shift 1"}</td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">${w.proses_sekarang || w.nama_proses}</span>
+                        </td>
+                        <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-amber-400">${Number(w.sisa_wip).toLocaleString('id-ID')}</td>
+                        <td class="px-4 py-3.5 text-center">
+                            <button onclick="adjustStokSemu('${w.customer}', '${w.jenis_barang}', '${w.nama_item}', '${w.proses_sekarang || w.nama_proses}', ${w.sisa_wip}, 'produksi')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-lg hover:bg-amber-500 hover:text-black transition-all cursor-pointer">✏️ Adjust</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderGudangTable(data) {
+            const tbodyGudang = document.getElementById('tabelGudang');
+            if(data.length === 0) {
+                tbodyGudang.innerHTML = `<tr><td colspan="6" class="px-5 py-8 text-center text-zinc-500 font-medium">📦 Gudang Barang Jadi Kosong.</td></tr>`;
+                return;
+            }
+            tbodyGudang.innerHTML = data.map(g => {
+                let displayJenis = g.jenis_barang;
+                if(displayJenis.includes(' - ')) displayJenis = displayJenis.split(' - ')[1];
+                return `
+                    <tr class="hover:bg-zinc-900/40 transition-colors">
+                        <td class="px-5 py-3.5 font-medium text-zinc-300">${g.customer}</td>
+                        <td class="px-4 py-3.5 text-zinc-400">${displayJenis}</td>
+                        <td class="px-4 py-3.5 font-mono text-zinc-400">${g.nama_item}</td>
+                        <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${g.shift_kerja || "Shift 1"}</td>
+                        <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-emerald-400">${Number(g.stok_jadi || g.stok_ready || 0).toLocaleString('id-ID')}</td>
+                        <td class="px-4 py-3.5 text-center">
+                            <button onclick="adjustStokSemu('${g.customer}', '${g.jenis_barang}', '${g.nama_item}', 'GUDANG JADI', ${g.stok_jadi || g.stok_ready || 0}, 'delivery')" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-lg hover:bg-emerald-500 hover:text-black transition-all cursor-pointer">✏️ Adjust</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterTabelWip() {
+            const keyword = document.getElementById('searchWip').value.toLowerCase().trim();
+            const filtered = currentWipState.filter(w => w.customer.toLowerCase().includes(keyword) || w.nama_item.toLowerCase().includes(keyword));
+            renderWipTable(filtered);
+        }
+
+        function filterTabelGudang() {
+            const keyword = document.getElementById('searchGudang').value.toLowerCase().trim();
+            const filtered = currentGudangState.filter(g => g.customer.toLowerCase().includes(keyword) || g.nama_item.toLowerCase().includes(keyword));
+            renderGudangTable(filtered);
+        }
+
+        // AMBIL HISTORI MAKS BILA PROSES DIUBAH
+        document.getElementById('prodProses').addEventListener('change', (e) => {
+            const customer = document.getElementById('prodCust').value;
+            const selectItem = document.getElementById('prodItem');
+            const selectedText = selectItem.options[selectItem.selectedIndex]?.text;
+            const prosesPilihan = e.target.value;
+            const infoWipMaks = document.getElementById('infoWipMaks');
+            const valWipMaks = document.getElementById('valWipMaks');
+            infoWipMaks.classList.add('hidden');
+
+            if(!customer || !selectedText || !prosesPilihan) return;
+
+            const itemSelected = dataMasterItem.find(i => i.id == selectItem.value);
+            const targetKey = `${itemSelected.customer} - ${itemSelected.jenis_barang}`;
+            const urutanProsesItem = dataMasterRouting
+                .filter(r => r.jenis_barang === targetKey || r.jenis_barang === itemSelected.jenis_barang)
+                .sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
+
+            const indeksSekarang = urutanProsesItem.findIndex(r => r.nama_proses === prosesPilihan);
+
+            if(indeksSekarang > 0) {
+                const prosesSebelumnya = urutanProsesItem[indeksSekarang - 1].nama_proses;
+                const matchWipSebelumnya = currentWipState.find(w => w.customer === customer && w.nama_item === selectedText && (w.proses_sekarang === prosesSebelumnya || w.nama_proses === prosesSebelumnya));
+                const stokMaks = matchWipSebelumnya ? parseInt(matchWipSebelumnya.sisa_wip) : 0;
+                valWipMaks.innerText = stokMaks.toLocaleString('id-ID');
+                infoWipMaks.classList.remove('hidden');
+            }
+        });
+
+        // HANDLER SUBMIT PRODUKSI TERBARU (MENGGUNAKAN ELEMEN TERPISAH)
+        document.getElementById('formProduksi').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const customer = document.getElementById('prodCust').value;
+            const jenisBoxRaw = document.getElementById('prodJenis').value;
+            const jenis_barang = `${customer} - ${jenisBoxRaw}`;
+            
+            const selectItem = document.getElementById('prodItem');
+            const nama_item = selectItem.options[selectItem.selectedIndex].text;
+            
+            const shift_kerja = document.getElementById('prodShift').value;
+            const proses_sekarang = document.getElementById('prodProses').value;
+            const jumlah_ok = parseInt(document.getElementById('prodQty').value) || 0;
+
+            const itemSelected = dataMasterItem.find(i => i.id == selectItem.value);
+            const urutanProsesItem = dataMasterRouting
+                .filter(r => r.jenis_barang === `${itemSelected.customer} - ${itemSelected.jenis_barang}` || r.jenis_barang === itemSelected.jenis_barang)
+                .sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
+
+            const indeksSekarang = urutanProsesItem.findIndex(r => r.nama_proses === proses_sekarang);
+            if(indeksSekarang > 0) {
+                const prosesSebelumnya = urutanProsesItem[indeksSekarang - 1].nama_proses;
+                const matchWipSebelumnya = currentWipState.find(w => w.customer === customer && w.nama_item === nama_item && (w.proses_sekarang === prosesSebelumnya || w.nama_proses === prosesSebelumnya));
+                const ketersediaanWip = matchWipSebelumnya ? parseInt(matchWipSebelumnya.sisa_wip) : 0;
+
+                if(jumlah_ok > ketersediaanWip) {
+                    alert(`❌ VALIDASI ERROR: Melampaui sisa barang di stasiun sebelumnya (${prosesSebelumnya}: ${ketersediaanWip} Pcs).`);
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/produksi`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng: 0, shift_kerja })
+                });
+                if(res.ok) {
+                    alert('🚀 Data produksi berhasil terekam!');
+                    addLog(`✅ [${shift_kerja}] Input: ${customer} | Qty: ${jumlah_ok} Ke ${proses_sekarang}`);
+                    document.getElementById('formProduksi').reset();
+                    loadDashboardData();
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        // FORM DELIVERY SUBMIT
+        document.getElementById('formDelivery').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const selectItem = document.getElementById('delItem');
+            const selectedText = selectItem.options[selectItem.selectedIndex].text;
+            const parts = selectedText.split(' | ');
+            const customer = parts[0];
+            const jenis_barang = `${customer} - ${parts[1]}`;
+            const nama_item = parts[2];
+            const no_surat_jalan = document.getElementById('delNoSj').value.trim();
+            const jumlah_kirim = parseInt(document.getElementById('delQty').value) || 0;
+
+            const matchGudang = currentGudangState.find(g => g.customer === customer && g.nama_item === nama_item);
+            const totalReadyStock = matchGudang ? parseInt(matchGudang.stok_jadi || matchGudang.stok_ready || 0) : 0;
+
+            if(jumlah_kirim > totalReadyStock) { alert(`❌ PENGIRIMAN DITOLAK: Stok tidak mencukupi!`); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/delivery`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim })
+                });
+                if(res.ok) {
+                    alert('🚚 Surat jalan terbit!');
+                    addLog(`🚚 SJ Outbound: No ${no_surat_jalan} | Qty: ${jumlah_kirim} Pcs`);
+                    document.getElementById('formDelivery').reset();
+                    loadDashboardData();
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        // ADJUST STOK
+        async function adjustStokSemu(customer, jenis_barang, nama_item, proses, stokLama, tipeForm) {
+            const inputKoreksi = prompt(`⚙️ PANEL KOREKSI STOK MANUFAKTUR\n-------------------------------\nCustomer: ${customer}\nPart: ${nama_item}\nPosisi: ${proses}\n\nMasukkan TOTAL SALDO BARU (Pcs):`, stokLama);
+            if(inputKoreksi === null) return;
+            const saldoBaru = parseInt(inputKoreksi);
+            if(isNaN(saldoBaru) || saldoBaru < 0) return alert('Koreksi dibatalkan.');
+            const selisihDelta = saldoBaru - stokLama;
+            if(selisihDelta === 0) return alert('Tidak ada perubahan nilai.');
+            const jenisKirim = jenis_barang.includes(' - ') ? jenis_barang : `${customer} - ${jenis_barang}`;
+
+            if(tipeForm === 'produksi') {
+                try {
+                    await fetch(`${API_URL}/produksi`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ customer, jenis_barang: jenisKirim, nama_item, proses_sekarang: proses, jumlah_ok: selisihDelta, jumlah_ng: 0, shift_kerja: "KOREKSI SYSTEM" })
+                    });
+                    addLog(`🛠️ Koreksi WIP: ${nama_item} (${proses}) set manual ke ${saldoBaru}`);
+                    alert('✅ Saldo Antrean WIP dikoreksi!');
+                    loadDashboardData();
+                } catch(e) { console.error(e); }
+            } else {
+                try {
+                    if(selisihDelta < 0) {
+                        await fetch(`${API_URL}/delivery`, {
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ customer, jenis_barang: jenisKirim, nama_item, no_surat_jalan: "ADJUSTMENT-MINUS", jumlah_kirim: Math.abs(selisihDelta) })
+                        });
+                    } else {
+                        await fetch(`${API_URL}/produksi`, {
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ customer, jenis_barang: jenisKirim, nama_item, proses_sekarang: "KOREKSI-PLUS", jumlah_ok: selisihDelta, jumlah_ng: 0, shift_kerja: "KOREKSI SYSTEM" })
+                        });
+                    }
+                    addLog(`🛠️ Koreksi Gudang: ${nama_item} set manual ke ${saldoBaru}`);
+                    alert('✅ Saldo Gudang berhasil dikoreksi!');
+                    loadDashboardData();
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        async function loadConfigData() {
+            try {
+                const r = await fetch(`${API_URL}/master`);
+                const d = await r.json();
+                dataMasterItem = d.items || [];
+                dataMasterRouting = d.proses || [];
+
+                const tbodyItem = document.getElementById('listMasterItem');
+                tbodyItem.innerHTML = dataMasterItem.map(i => `
+                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60"><td class="p-2 font-medium text-zinc-300"><span class="text-cyan-400 font-bold font-mono text-[10px]">[${i.nama_item}]</span> ${i.customer}<br><span class="text-zinc-500 text-[10px]">Jenis: ${i.jenis_barang}</span></td><td class="p-2 text-center"><button onclick="hapusMasterItem(${i.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded">🗑️</button></td></tr>
+                `).join('');
+
+                const tbodyRoute = document.getElementById('listMasterRouting');
+                tbodyRoute.innerHTML = dataMasterRouting.map(r => `
+                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60"><td class="p-2 text-zinc-400 text-[10px] font-medium">${r.jenis_barang}</td><td class="p-2 font-medium text-zinc-200">${r.nama_proses}</td><td class="p-2 text-center font-mono text-amber-400 font-bold">${r.urutan_proses || 1}</td><td class="p-2 text-center"><button onclick="hapusMasterRouting(${r.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded">🗑️</button></td></tr>
+                `).join('');
+
+                const routeJenisSelect = document.getElementById('routeJenis');
+                let opts = '<option value="">-- Pilih Item --</option>';
+                dataMasterItem.forEach(i => { opts += `<option value="${i.customer} - ${i.jenis_barang}">${i.customer} (${i.jenis_barang})</option>`; });
+                routeJenisSelect.innerHTML = opts;
+            } catch(err) { console.error(err); }
+        }
+
+        async function hapusMasterItem(id) { if(confirm('Hapus item?')) { await fetch(`${API_URL}/master/item/${id}`, { method: 'DELETE' }); loadConfigData(); } }
+        async function hapusMasterRouting(id) { if(confirm('Hapus proses?')) { await fetch(`${API_URL}/master/proses/${id}`, { method: 'DELETE' }); loadConfigData(); } }
+
+        function exportTableToExcel(tableID, filename = '') {
+            const table = document.getElementById(tableID);
+            if (table.rows.length <= 1 && table.innerHTML.includes('text-zinc-500')) { alert('⚠️ Tidak ada data aktif!'); return; }
+            const parentTable = table.closest('section').querySelector('table');
+            const wb = XLSX.utils.table_to_book(parentTable, { sheet: "Data Report" });
+            XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
         window.onload = loadDashboardData;
     </script>
 </body>
