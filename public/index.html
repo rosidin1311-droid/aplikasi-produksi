@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MONITOR WIP MANUFAKTUR V3.1</title>
-    <!-- Tailwind CSS CDN -->
+    <title>MONITOR WIP MANUFAKTUR V3.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Font Inter & Google Icons yang Diperbaiki -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <!-- Library SheetJS untuk Export Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -23,7 +20,6 @@
 </head>
 <body class="bg-neutral-950 text-zinc-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-neutral-950">
 
-    <!-- HEADER UTAMA -->
     <header class="border-b border-zinc-800/60 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -32,7 +28,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">CYBER-WIP MONITOR</h1>
-                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Manufacturing Control Center v3.1</p>
+                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Manufacturing Control Center v3.2</p>
                 </div>
             </div>
             
@@ -45,11 +41,9 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- ROW 1: INPUT FORM DENGAN DUA PANEL -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            <!-- PANEL 1: INPUT PROSES PRODUKSI -->
-            <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group flex flex-col justify-between">
+            <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-cyan-500 to-blue-500"></div>
                 <div>
                     <div class="flex items-center gap-2 mb-4">
@@ -60,10 +54,11 @@
                     <form id="formProduksi" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div class="sm:col-span-2">
-                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Pilih Item Produksi</label>
-                                <select id="prodItem" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all"></select>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">1. Pilih Customer</label>
+                                <select id="prodCust" required onchange="updateDropdownJenis()" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Customer --</option>
+                                </select>
                             </div>
-                            <!-- FITUR UPDATE: SHIFT KERJA PRODUKSI -->
                             <div>
                                 <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Shift Kerja</label>
                                 <select id="prodShift" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
@@ -73,10 +68,25 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">2. Pilih Jenis Barang/Box</label>
+                                <select id="prodJenis" required disabled onchange="updateDropdownItem()" class="w-full bg-zinc-950 border border-zinc-800 disabled:opacity-40 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Jenis --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">3. Pilih Kode / Part Number</label>
+                                <select id="prodItem" required disabled class="w-full bg-zinc-950 border border-zinc-800 disabled:opacity-40 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">-- Pilih Kode Item --</option>
+                                </select>
+                            </div>
+                        </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Stasiun Kerja / Proses</label>
+                                <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">4. Stasiun Kerja / Proses</label>
                                 <select id="prodProses" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-all">
                                     <option value="">-- Pilih Proses --</option>
                                 </select>
@@ -92,16 +102,14 @@
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-[0.99] text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] flex items-center justify-center gap-2 cursor-pointer">
+                        <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] flex items-center justify-center gap-2 cursor-pointer">
                             <span class="material-symbols-outlined text-sm">send_and_archive</span> Submit Ke Lantai Kerja
                         </button>
                     </form>
                 </div>
             </section>
 
-            <!-- PANEL 2: INPUT SURAT JALAN & AUDIT LOG PANEL -->
             <div class="flex flex-col gap-4">
-                <!-- FORM DELIVERY -->
                 <section class="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative overflow-hidden group">
                     <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-emerald-500 to-teal-500"></div>
                     <div class="flex items-center gap-2 mb-4">
@@ -130,13 +138,12 @@
                                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">PCS</span>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2 cursor-pointer">
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-neutral-950 font-bold text-xs py-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2 cursor-pointer">
                             <span class="material-symbols-outlined text-sm">local_shipping</span> Dispatch / Kurangi Gudang Jadi
                         </button>
                     </form>
                 </section>
 
-                <!-- LIVE LOG ACTIVITY PANEL -->
                 <section class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex-1">
                     <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
                         <span class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> Live Activity Log</span>
@@ -149,10 +156,7 @@
             </div>
         </div>
 
-        <!-- ROW 2: CORE DASHBOARD MONITORING (TABEL) -->
         <div class="grid grid-cols-1 gap-6">
-            
-            <!-- MONITOR 1: TABEL WIP AKTIF -->
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-3">
                     <div class="flex items-center gap-2">
@@ -169,7 +173,6 @@
                         </button>
                     </div>
                 </div>
-                
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -188,7 +191,6 @@
                 </div>
             </section>
 
-            <!-- MONITOR 2: TABEL BARANG JADI (READY STOCK) -->
             <section class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
                 <div class="bg-zinc-900/60 px-5 py-4 border-b border-zinc-800/80 flex justify-between items-center flex-wrap gap-3">
                     <div class="flex items-center gap-2">
@@ -205,7 +207,6 @@
                         </button>
                     </div>
                 </div>
-                
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -225,10 +226,8 @@
         </div>
     </main>
 
-    <!-- FLOATING MODAL: CONFIGURATION HUB -->
     <div id="configModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative space-y-6">
-            
             <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-amber-400">tune</span>
@@ -238,10 +237,7 @@
                     <span class="material-symbols-outlined block">close</span>
                 </button>
             </div>
-
-            <!-- MODAL GRID CONTENT -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- REGISTER ITEM -->
                 <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
                     <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
                         <span class="material-symbols-outlined text-sm text-cyan-400">add_box</span> Register Item Baru
@@ -259,28 +255,17 @@
                             <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Kode Barang / Part Number</label>
                             <input type="text" id="regKode" required placeholder="Contoh: M-00616" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
                         </div>
-                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer">
-                            Daftarkan Item Ke Sistem
-                        </button>
+                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer">Daftarkan Item Ke Sistem</button>
                     </form>
-
                     <div class="mt-4 border-t border-zinc-800/80 pt-3">
-                        <h5 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Item Terdaftar Saat Ini:</h5>
                         <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
                             <table class="w-full text-left text-[11px]">
-                                <thead class="bg-zinc-900 text-zinc-400 sticky top-0 font-bold">
-                                    <tr>
-                                        <th class="p-2">Item/Customer</th>
-                                        <th class="p-2 text-center w-12">Aksi</th>
-                                    </tr>
-                                </thead>
+                                <thead class="bg-zinc-900 text-zinc-400 sticky top-0 font-bold"><tr><th class="p-2">Item/Customer</th><th class="p-2 text-center w-12">Aksi</th></tr></thead>
                                 <tbody id="listMasterItem" class="divide-y divide-zinc-800/60"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
-                <!-- ROUTING -->
                 <div class="bg-zinc-950 border border-zinc-800/60 rounded-2xl p-4 space-y-4">
                     <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
                         <span class="material-symbols-outlined text-sm text-amber-400">account_tree</span> Atur Tahapan Alur Proses (Routing)
@@ -300,23 +285,12 @@
                             <label class="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">No Urutan Jalur Kerja</label>
                             <input type="number" id="routeUrutan" required min="1" placeholder="Misal: 1, 2" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none">
                         </div>
-                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer">
-                            Simpan Urutan Alur
-                        </button>
+                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer">Simpan Urutan Alur</button>
                     </form>
-
                     <div class="mt-4 border-t border-zinc-800/80 pt-3">
-                        <h5 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Matriks Alur Saat Ini:</h5>
                         <div class="max-h-[160px] overflow-y-auto border border-zinc-800 rounded-xl">
                             <table class="w-full text-left text-[11px]">
-                                <thead class="bg-zinc-900 text-zinc-400 sticky top-0 font-bold">
-                                    <tr>
-                                        <th class="p-2">Target / Jenis</th>
-                                        <th class="p-2">Proses</th>
-                                        <th class="p-2 text-center w-10">Urut</th>
-                                        <th class="p-2 text-center w-10">Hapus</th>
-                                    </tr>
-                                </thead>
+                                <thead class="bg-zinc-900 text-zinc-400 sticky top-0 font-bold"><tr><th class="p-2">Target / Jenis</th><th class="p-2">Proses</th><th class="p-2 text-center w-10">Urut</th><th class="p-2 text-center w-10">Hapus</th></tr></thead>
                                 <tbody id="listMasterRouting" class="divide-y divide-zinc-800/60"></tbody>
                             </table>
                         </div>
@@ -326,7 +300,6 @@
         </div>
     </div>
 
-    <!-- ENGINE LOGIC -->
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:3000/api'
@@ -343,19 +316,12 @@
             container.innerHTML = `<div>[${time}] ${message}</div>` + container.innerHTML;
         }
 
-        function clearFrontendLogs() {
-            document.getElementById('activityLogs').innerHTML = '<div>[SYSTEM] Log dibersihkan.</div>';
-        }
+        function clearFrontendLogs() { document.getElementById('activityLogs').innerHTML = '<div>[SYSTEM] Log dibersihkan.</div>'; }
 
         function toggleModal(show) {
             const modal = document.getElementById('configModal');
-            if(show) {
-                modal.classList.remove('hidden');
-                loadConfigData();
-            } else {
-                modal.classList.add('hidden');
-                loadDashboardData();
-            }
+            if(show) { modal.classList.remove('hidden'); loadConfigData(); } 
+            else { modal.classList.add('hidden'); loadDashboardData(); }
         }
 
         async function loadDashboardData() {
@@ -365,28 +331,86 @@
                 dataMasterItem = d.items || [];
                 dataMasterRouting = d.proses || [];
                 
-                const prodSelect = document.getElementById('prodItem');
-                const delSelect = document.getElementById('delItem');
+                // ISI DROPDOWN UTAMA: PILIH CUSTOMER (DI-UNIQUISASI AGAR TIDAK DOUBLE)
+                const prodCust = document.getElementById('prodCust');
+                const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
                 
-                let optionHtml = '<option value="">-- Pilih Item --</option>';
-                dataMasterItem.forEach(it => {
-                    optionHtml += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`;
+                let custHtml = '<option value="">-- Pilih Customer --</option>';
+                uniqueCustomers.forEach(cust => {
+                    custHtml += `<option value="${cust}">${cust}</option>`;
                 });
-                prodSelect.innerHTML = optionHtml;
-                delSelect.innerHTML = optionHtml;
+                prodCust.innerHTML = custHtml;
+
+                // Reset Dropdown turunan lainnya bawaan awal
+                document.getElementById('prodJenis').innerHTML = '<option value="">-- Pilih Jenis --</option>';
+                document.getElementById('prodJenis').disabled = true;
+                document.getElementById('prodItem').innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+                document.getElementById('prodItem').disabled = true;
+                document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
+
+                // Dropdown Form Delivery (Biarkan bawaan/gabungan karena outbound biasanya cepat pakai search)
+                const delSelect = document.getElementById('delItem');
+                let optDel = '<option value="">-- Pilih Item --</option>';
+                dataMasterItem.forEach(it => { optDel += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`; });
+                delSelect.innerHTML = optDel;
 
                 const resWip = await fetch(`${API_URL}/wip`);
                 const resData = await resWip.json();
-                
                 currentWipState = resData.wip || [];
                 currentGudangState = resData.gudang || [];
 
                 renderWipTable(currentWipState);
                 renderGudangTable(currentGudangState);
+            } catch (err) { console.error(err); }
+        }
 
-            } catch (err) {
-                console.error(err);
-                addLog("⚠️ Gagal sinkronisasi data dari server api.");
+        // TRIGGER DROPDOWN TIER 2: JENIS BARANG
+        function updateDropdownJenis() {
+            const custSelected = document.getElementById('prodCust').value;
+            const selectJenis = document.getElementById('prodJenis');
+            const selectItem = document.getElementById('prodItem');
+            
+            selectJenis.innerHTML = '<option value="">-- Pilih Jenis --</option>';
+            selectItem.innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+            selectItem.disabled = true;
+            document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
+
+            if(!custSelected) { selectJenis.disabled = true; return; }
+
+            const filteredItems = dataMasterItem.filter(i => i.customer === custSelected);
+            const uniqueJenis = [...new Set(filteredItems.map(i => i.jenis_barang))];
+
+            uniqueJenis.forEach(j => { selectJenis.innerHTML += `<option value="${j}">${j}</option>`; });
+            selectJenis.disabled = false;
+        }
+
+        // TRIGGER DROPDOWN TIER 3: KODE/PART NUMBER & PROSES ROUTINGNYA
+        function updateDropdownItem() {
+            const custSelected = document.getElementById('prodCust').value;
+            const jenisSelected = document.getElementById('prodJenis').value;
+            const selectItem = document.getElementById('prodItem');
+            const selectProses = document.getElementById('prodProses');
+
+            selectItem.innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+            selectProses.innerHTML = '<option value="">-- Pilih Proses --</option>';
+
+            if(!jenisSelected) { selectItem.disabled = true; return; }
+
+            const filteredItems = dataMasterItem.filter(i => i.customer === custSelected && i.jenis_barang === jenisSelected);
+            filteredItems.forEach(i => { selectItem.innerHTML += `<option value="${i.id}">${i.nama_item}</option>`; });
+            selectItem.disabled = false;
+
+            // BIND AMBIL ALUR PROSES LANGSUNG BERDASARKAN KOMBINASI TARGET ROUTINGNYA
+            const targetKey = `${custSelected} - ${jenisSelected}`;
+            const filteredRouting = dataMasterRouting.filter(r => r.jenis_barang === targetKey || r.jenis_barang === jenisSelected);
+            
+            if(filteredRouting.length === 0) {
+                selectProses.innerHTML = '<option value="">⚠️ Alur Belum Diatur!</option>';
+            } else {
+                filteredRouting.sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
+                filteredRouting.forEach(r => {
+                    selectProses.innerHTML += `<option value="${r.nama_proses}">Urutan ${r.urutan_proses || 1}: ${r.nama_proses}</option>`;
+                });
             }
         }
 
@@ -399,22 +423,18 @@
             tbodyWip.innerHTML = data.map(w => {
                 let displayJenis = w.jenis_barang;
                 if(displayJenis.includes(' - ')) displayJenis = displayJenis.split(' - ')[1];
-                // Default shift jika kosong di database lama
-                const shiftText = w.shift_kerja || "Shift 1"; 
                 return `
                     <tr class="hover:bg-zinc-900/40 transition-colors">
                         <td class="px-5 py-3.5 font-medium text-zinc-300">${w.customer}</td>
                         <td class="px-4 py-3.5 text-zinc-400">${displayJenis}</td>
                         <td class="px-4 py-3.5 font-mono text-zinc-400">${w.nama_item}</td>
-                        <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${shiftText}</td>
+                        <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${w.shift_kerja || "Shift 1"}</td>
                         <td class="px-4 py-3.5 text-center">
                             <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">${w.proses_sekarang || w.nama_proses}</span>
                         </td>
                         <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-amber-400">${Number(w.sisa_wip).toLocaleString('id-ID')}</td>
                         <td class="px-4 py-3.5 text-center">
-                            <button onclick="adjustStokSemu('${w.customer}', '${w.jenis_barang}', '${w.nama_item}', '${w.proses_sekarang || w.nama_proses}', ${w.sisa_wip}, 'produksi')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-lg hover:bg-amber-500 hover:text-black transition-all cursor-pointer">
-                                <span class="material-symbols-outlined text-xs">edit_note</span> Adjust
-                            </button>
+                            <button onclick="adjustStokSemu('${w.customer}', '${w.jenis_barang}', '${w.nama_item}', '${w.proses_sekarang || w.nama_proses}', ${w.sisa_wip}, 'produksi')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-lg hover:bg-amber-500 hover:text-black transition-all cursor-pointer">✏️ Adjust</button>
                         </td>
                     </tr>
                 `;
@@ -430,18 +450,15 @@
             tbodyGudang.innerHTML = data.map(g => {
                 let displayJenis = g.jenis_barang;
                 if(displayJenis.includes(' - ')) displayJenis = displayJenis.split(' - ')[1];
-                const shiftText = g.shift_kerja || "Shift 1";
                 return `
                     <tr class="hover:bg-zinc-900/40 transition-colors">
                         <td class="px-5 py-3.5 font-medium text-zinc-300">${g.customer}</td>
                         <td class="px-4 py-3.5 text-zinc-400">${displayJenis}</td>
                         <td class="px-4 py-3.5 font-mono text-zinc-400">${g.nama_item}</td>
-                        <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${shiftText}</td>
+                        <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${g.shift_kerja || "Shift 1"}</td>
                         <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-emerald-400">${Number(g.stok_jadi || g.stok_ready || 0).toLocaleString('id-ID')}</td>
                         <td class="px-4 py-3.5 text-center">
-                            <button onclick="adjustStokSemu('${g.customer}', '${g.jenis_barang}', '${g.nama_item}', 'GUDANG JADI', ${g.stok_jadi || g.stok_ready || 0}, 'delivery')" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-lg hover:bg-emerald-500 hover:text-black transition-all cursor-pointer">
-                                <span class="material-symbols-outlined text-xs">edit_note</span> Adjust
-                            </button>
+                            <button onclick="adjustStokSemu('${g.customer}', '${g.jenis_barang}', '${g.nama_item}', 'GUDANG JADI', ${g.stok_jadi || g.stok_ready || 0}, 'delivery')" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-lg hover:bg-emerald-500 hover:text-black transition-all cursor-pointer">✏️ Adjust</button>
                         </td>
                     </tr>
                 `;
@@ -460,7 +477,9 @@
             renderGudangTable(filtered);
         }
 
+        // AMBIL HISTORI MAKS BILA PROSES DIUBAH
         document.getElementById('prodProses').addEventListener('change', (e) => {
+            const customer = document.getElementById('prodCust').value;
             const selectItem = document.getElementById('prodItem');
             const selectedText = selectItem.options[selectItem.selectedIndex]?.text;
             const prosesPilihan = e.target.value;
@@ -468,11 +487,7 @@
             const valWipMaks = document.getElementById('valWipMaks');
             infoWipMaks.classList.add('hidden');
 
-            if(!selectedText || !prosesPilihan) return;
-
-            const parts = selectedText.split(' | ');
-            const customer = parts[0];
-            const nama_item = parts[2];
+            if(!customer || !selectedText || !prosesPilihan) return;
 
             const itemSelected = dataMasterItem.find(i => i.id == selectItem.value);
             const targetKey = `${itemSelected.customer} - ${itemSelected.jenis_barang}`;
@@ -484,22 +499,23 @@
 
             if(indeksSekarang > 0) {
                 const prosesSebelumnya = urutanProsesItem[indeksSekarang - 1].nama_proses;
-                const matchWipSebelumnya = currentWipState.find(w => w.customer === customer && w.nama_item === nama_item && (w.proses_sekarang === prosesSebelumnya || w.nama_proses === prosesSebelumnya));
+                const matchWipSebelumnya = currentWipState.find(w => w.customer === customer && w.nama_item === selectedText && (w.proses_sekarang === prosesSebelumnya || w.nama_proses === prosesSebelumnya));
                 const stokMaks = matchWipSebelumnya ? parseInt(matchWipSebelumnya.sisa_wip) : 0;
                 valWipMaks.innerText = stokMaks.toLocaleString('id-ID');
                 infoWipMaks.classList.remove('hidden');
             }
         });
 
+        // HANDLER SUBMIT PRODUKSI TERBARU (MENGGUNAKAN ELEMEN TERPISAH)
         document.getElementById('formProduksi').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const selectItem = document.getElementById('prodItem');
-            const selectedText = selectItem.options[selectItem.selectedIndex].text;
+            const customer = document.getElementById('prodCust').value;
+            const jenisBoxRaw = document.getElementById('prodJenis').value;
+            const jenis_barang = `${customer} - ${jenisBoxRaw}`;
             
-            const parts = selectedText.split(' | ');
-            const customer = parts[0];
-            const jenis_barang = `${customer} - ${parts[1]}`; 
-            const nama_item = parts[2];
+            const selectItem = document.getElementById('prodItem');
+            const nama_item = selectItem.options[selectItem.selectedIndex].text;
+            
             const shift_kerja = document.getElementById('prodShift').value;
             const proses_sekarang = document.getElementById('prodProses').value;
             const jumlah_ok = parseInt(document.getElementById('prodQty').value) || 0;
@@ -522,24 +538,20 @@
             }
 
             try {
-                // Ikut menyisipkan field shift_kerja ke payload backend
                 const res = await fetch(`${API_URL}/produksi`, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ customer, jenis_barang, nama_item, proses_sekarang, jumlah_ok, jumlah_ng: 0, shift_kerja })
                 });
-                
                 if(res.ok) {
                     alert('🚀 Data produksi berhasil terekam!');
                     addLog(`✅ [${shift_kerja}] Input: ${customer} | Qty: ${jumlah_ok} Ke ${proses_sekarang}`);
                     document.getElementById('formProduksi').reset();
-                    document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
-                    document.getElementById('infoWipMaks').classList.add('hidden');
                     loadDashboardData();
                 }
             } catch (err) { console.error(err); }
         });
 
+        // FORM DELIVERY SUBMIT
         document.getElementById('formDelivery').addEventListener('submit', async (e) => {
             e.preventDefault();
             const selectItem = document.getElementById('delItem');
@@ -554,18 +566,13 @@
             const matchGudang = currentGudangState.find(g => g.customer === customer && g.nama_item === nama_item);
             const totalReadyStock = matchGudang ? parseInt(matchGudang.stok_jadi || matchGudang.stok_ready || 0) : 0;
 
-            if(jumlah_kirim > totalReadyStock) {
-                alert(`❌ PENGIRIMAN DITOLAK: Stok Gudang tidak mencukupi!`);
-                return;
-            }
+            if(jumlah_kirim > totalReadyStock) { alert(`❌ PENGIRIMAN DITOLAK: Stok tidak mencukupi!`); return; }
 
             try {
                 const res = await fetch(`${API_URL}/delivery`, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ customer, jenis_barang, nama_item, no_surat_jalan, jumlah_kirim })
                 });
-                
                 if(res.ok) {
                     alert('🚚 Surat jalan terbit!');
                     addLog(`🚚 SJ Outbound: No ${no_surat_jalan} | Qty: ${jumlah_kirim} Pcs`);
@@ -575,26 +582,23 @@
             } catch (err) { console.error(err); }
         });
 
+        // ADJUST STOK
         async function adjustStokSemu(customer, jenis_barang, nama_item, proses, stokLama, tipeForm) {
-            const inputKoreksi = prompt(`⚙️ PANEL KOREKSI STOK MANUFAKTUR\n-------------------------------\nCustomer: ${customer}\nPart/Kode: ${nama_item}\nPosisi: ${proses}\n\nMasukkan TOTAL SALDO BARU yang valid (Pcs):`, stokLama);
-            
+            const inputKoreksi = prompt(`⚙️ PANEL KOREKSI STOK MANUFAKTUR\n-------------------------------\nCustomer: ${customer}\nPart: ${nama_item}\nPosisi: ${proses}\n\nMasukkan TOTAL SALDO BARU (Pcs):`, stokLama);
             if(inputKoreksi === null) return;
             const saldoBaru = parseInt(inputKoreksi);
             if(isNaN(saldoBaru) || saldoBaru < 0) return alert('Koreksi dibatalkan.');
-
             const selisihDelta = saldoBaru - stokLama;
             if(selisihDelta === 0) return alert('Tidak ada perubahan nilai.');
-
             const jenisKirim = jenis_barang.includes(' - ') ? jenis_barang : `${customer} - ${jenis_barang}`;
 
             if(tipeForm === 'produksi') {
                 try {
                     await fetch(`${API_URL}/produksi`, {
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'},
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ customer, jenis_barang: jenisKirim, nama_item, proses_sekarang: proses, jumlah_ok: selisihDelta, jumlah_ng: 0, shift_kerja: "KOREKSI SYSTEM" })
                     });
-                    addLog(`🛠️ Koreksi WIP: ${nama_item} (${proses}) disetel manual ke ${saldoBaru}`);
+                    addLog(`🛠️ Koreksi WIP: ${nama_item} (${proses}) set manual ke ${saldoBaru}`);
                     alert('✅ Saldo Antrean WIP dikoreksi!');
                     loadDashboardData();
                 } catch(e) { console.error(e); }
@@ -602,18 +606,16 @@
                 try {
                     if(selisihDelta < 0) {
                         await fetch(`${API_URL}/delivery`, {
-                            method: 'POST', 
-                            headers: {'Content-Type': 'application/json'},
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({ customer, jenis_barang: jenisKirim, nama_item, no_surat_jalan: "ADJUSTMENT-MINUS", jumlah_kirim: Math.abs(selisihDelta) })
                         });
                     } else {
                         await fetch(`${API_URL}/produksi`, {
-                            method: 'POST', 
-                            headers: {'Content-Type': 'application/json'},
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({ customer, jenis_barang: jenisKirim, nama_item, proses_sekarang: "KOREKSI-PLUS", jumlah_ok: selisihDelta, jumlah_ng: 0, shift_kerja: "KOREKSI SYSTEM" })
                         });
                     }
-                    addLog(`🛠️ Koreksi Gudang: ${nama_item} disetel manual ke ${saldoBaru}`);
+                    addLog(`🛠️ Koreksi Gudang: ${nama_item} set manual ke ${saldoBaru}`);
                     alert('✅ Saldo Gudang berhasil dikoreksi!');
                     loadDashboardData();
                 } catch(e) { console.error(e); }
@@ -629,87 +631,20 @@
 
                 const tbodyItem = document.getElementById('listMasterItem');
                 tbodyItem.innerHTML = dataMasterItem.map(i => `
-                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60">
-                        <td class="p-2 font-medium text-zinc-300">
-                            <span class="text-cyan-400 font-bold font-mono text-[10px]">[${i.nama_item}]</span> ${i.customer} <br>
-                            <span class="text-zinc-500 text-[10px]">Jenis: ${i.jenis_barang}</span>
-                        </td>
-                        <td class="p-2 text-center">
-                            <button onclick="hapusMasterItem(${i.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded cursor-pointer">🗑️</button>
-                        </td>
-                    </tr>
+                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60"><td class="p-2 font-medium text-zinc-300"><span class="text-cyan-400 font-bold font-mono text-[10px]">[${i.nama_item}]</span> ${i.customer}<br><span class="text-zinc-500 text-[10px]">Jenis: ${i.jenis_barang}</span></td><td class="p-2 text-center"><button onclick="hapusMasterItem(${i.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded">🗑️</button></td></tr>
                 `).join('');
 
                 const tbodyRoute = document.getElementById('listMasterRouting');
                 tbodyRoute.innerHTML = dataMasterRouting.map(r => `
-                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60">
-                        <td class="p-2 text-zinc-400 text-[10px] font-medium">${r.jenis_barang}</td>
-                        <td class="p-2 font-medium text-zinc-200">${r.nama_proses}</td>
-                        <td class="p-2 text-center font-mono text-amber-400 font-bold">${r.urutan_proses || 1}</td>
-                        <td class="p-2 text-center">
-                            <button onclick="hapusMasterRouting(${r.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded cursor-pointer">🗑️</button>
-                        </td>
-                    </tr>
+                    <tr class="border-b border-zinc-800/40 hover:bg-zinc-900/60"><td class="p-2 text-zinc-400 text-[10px] font-medium">${r.jenis_barang}</td><td class="p-2 font-medium text-zinc-200">${r.nama_proses}</td><td class="p-2 text-center font-mono text-amber-400 font-bold">${r.urutan_proses || 1}</td><td class="p-2 text-center"><button onclick="hapusMasterRouting(${r.id})" class="text-rose-400 hover:text-rose-300 p-1 hover:bg-zinc-800 rounded">🗑️</button></td></tr>
                 `).join('');
 
                 const routeJenisSelect = document.getElementById('routeJenis');
                 let opts = '<option value="">-- Pilih Item --</option>';
-                dataMasterItem.forEach(i => {
-                    opts += `<option value="${i.customer} - ${i.jenis_barang}">${i.customer} (${i.jenis_barang})</option>`;
-                });
+                dataMasterItem.forEach(i => { opts += `<option value="${i.customer} - ${i.jenis_barang}">${i.customer} (${i.jenis_barang})</option>`; });
                 routeJenisSelect.innerHTML = opts;
             } catch(err) { console.error(err); }
         }
-
-        document.getElementById('prodItem').addEventListener('change', async (e) => {
-            const itemId = e.target.value;
-            const selectProses = document.getElementById('prodProses');
-            selectProses.innerHTML = '<option value="">-- Pilih Proses --</option>';
-            if(!itemId) return;
-
-            const selectedItem = dataMasterItem.find(i => i.id == itemId);
-            if(selectedItem) {
-                const targetKey = `${selectedItem.customer} - ${selectedItem.jenis_barang}`;
-                const filteredRouting = dataMasterRouting.filter(r => r.jenis_barang === targetKey || r.jenis_barang === selectedItem.jenis_barang);
-                
-                if(filteredRouting.length === 0) {
-                    selectProses.innerHTML = '<option value="">⚠️ Alur Belum Diatur!</option>';
-                } else {
-                    filteredRouting.sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
-                    filteredRouting.forEach(r => {
-                        selectProses.innerHTML += `<option value="${r.nama_proses}">Urutan ${r.urutan_proses || 1}: ${r.nama_proses}</option>`;
-                    });
-                }
-            }
-        });
-
-        document.getElementById('formRegisterItem').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const customer = document.getElementById('regCustomer').value.toUpperCase().trim();
-            const jenis_barang = document.getElementById('regJenis').value.toUpperCase().trim();
-            const nama_item = document.getElementById('regKode').value.toUpperCase().trim();
-            try {
-                const res = await fetch(`${API_URL}/master/item`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ customer, jenis_barang, nama_item })
-                });
-                if(res.ok) { alert('➕ Item Berhasil Terdaftar!'); document.getElementById('formRegisterItem').reset(); await loadConfigData(); }
-            } catch (err) { console.error(err); }
-        });
-
-        document.getElementById('formRouting').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const jenis_barang = document.getElementById('routeJenis').value;
-            const nama_proses = document.getElementById('routeNamaProses').value.toUpperCase().trim();
-            const urutan_proses = parseInt(document.getElementById('routeUrutan').value);
-            try {
-                const res = await fetch(`${API_URL}/master/proses`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ jenis_barang, nama_proses, urutan_proses })
-                });
-                if(res.ok) { alert('⚙️ Alur Proses Berhasil Ditambahkan!'); document.getElementById('formRouting').reset(); await loadConfigData(); }
-            } catch (err) { console.error(err); }
-        });
 
         async function hapusMasterItem(id) { if(confirm('Hapus item?')) { await fetch(`${API_URL}/master/item/${id}`, { method: 'DELETE' }); loadConfigData(); } }
         async function hapusMasterRouting(id) { if(confirm('Hapus proses?')) { await fetch(`${API_URL}/master/proses/${id}`, { method: 'DELETE' }); loadConfigData(); } }
