@@ -298,8 +298,7 @@
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:3000/api'
             : window.location.origin + '/api';
-          // TAMBAHKAN BARIS INI DI SINI
-        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o'; 
+
         let dataMasterItem = [];
         let dataMasterRouting = [];
         let currentWipState = [];
@@ -320,45 +319,49 @@
         }
 
         async function loadDashboardData() {
-            try {initDelDropdowns();}
-        }   
-                const r = await fetch(`${API_URL}/master`);
-                const d = await r.json();
-                dataMasterItem = d.items || [];
-                dataMasterRouting = d.proses || [];
-                
-                // ISI DROPDOWN UTAMA: PILIH CUSTOMER (DI-UNIQUISASI AGAR TIDAK DOUBLE)
-                const prodCust = document.getElementById('prodCust');
-                const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
-                
-                let custHtml = '<option value="">-- Pilih Customer --</option>';
-                uniqueCustomers.forEach(cust => {
-                    custHtml += `<option value="${cust}">${cust}</option>`;
-                });
-                prodCust.innerHTML = custHtml;
+    try {
+        initDelDropdowns(); // Inisialisasi dropdown delivery
 
-                // Reset Dropdown turunan lainnya bawaan awal
-                document.getElementById('prodJenis').innerHTML = '<option value="">-- Pilih Jenis --</option>';
-                document.getElementById('prodJenis').disabled = true;
-                document.getElementById('prodItem').innerHTML = '<option value="">-- Pilih Kode Item --</option>';
-                document.getElementById('prodItem').disabled = true;
-                document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
+        const r = await fetch(`${API_URL}/master`);
+        const d = await r.json();
+        dataMasterItem = d.items || [];
+        dataMasterRouting = d.proses || [];
+        
+        // ISI DROPDOWN UTAMA: PILIH CUSTOMER
+        const prodCust = document.getElementById('prodCust');
+        const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
+        
+        let custHtml = '<option value="">-- Pilih Customer --</option>';
+        uniqueCustomers.forEach(cust => {
+            custHtml += `<option value="${cust}">${cust}</option>`;
+        });
+        prodCust.innerHTML = custHtml;
 
-                // Dropdown Form Delivery (Biarkan bawaan/gabungan karena outbound biasanya cepat pakai search)
-                const delSelect = document.getElementById('delItem');
-                let optDel = '<option value="">-- Pilih Item --</option>';
-                dataMasterItem.forEach(it => { optDel += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`; });
-                delSelect.innerHTML = optDel;
+        // Reset Dropdown turunan
+        document.getElementById('prodJenis').innerHTML = '<option value="">-- Pilih Jenis --</option>';
+        document.getElementById('prodJenis').disabled = true;
+        document.getElementById('prodItem').innerHTML = '<option value="">-- Pilih Kode Item --</option>';
+        document.getElementById('prodItem').disabled = true;
+        document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
 
-                const resWip = await fetch(`${API_URL}/wip`);
-                const resData = await resWip.json();
-                currentWipState = resData.wip || [];
-                currentGudangState = resData.gudang || [];
+        // Dropdown Form Delivery
+        const delSelect = document.getElementById('delItem');
+        let optDel = '<option value="">-- Pilih Item --</option>';
+        dataMasterItem.forEach(it => { optDel += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`; });
+        delSelect.innerHTML = optDel;
 
-                renderWipTable(currentWipState);
-                renderGudangTable(currentGudangState);
-            } catch (err) { console.error(err); }
-        }
+        const resWip = await fetch(`${API_URL}/wip`);
+        const resData = await resWip.json();
+        currentWipState = resData.wip || [];
+        currentGudangState = resData.gudang || [];
+
+        renderWipTable(currentWipState);
+        renderGudangTable(currentGudangState);
+    } catch (err) { 
+        console.error("Gagal memuat dashboard:", err); 
+    }
+}
+
 
         // TRIGGER DROPDOWN TIER 2: JENIS BARANG
         function updateDropdownJenis() {
@@ -678,4 +681,4 @@ function updateDelItem() {
 
         </script>
 </body>
-    </html>
+</html>
