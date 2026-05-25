@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MONITOR WIP CLOUD V3.5</title>
+    <title>MONITOR WIP CLOUD V3.6</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">CYBER-WIP MOBILE</h1>
-                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Mobile Manufacturing Center v3.5</p>
+                    <p class="text-[10px] text-zinc-500 tracking-wider font-medium uppercase">Mobile Manufacturing Center v3.6</p>
                 </div>
             </div>
             
@@ -140,10 +140,10 @@
                 <section class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex-1">
                     <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
                         <span class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Cloud Sync Status</span>
-                        <span id="syncIndicator" class="text-[9px] text-emerald-400 uppercase font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Lokal Autocure ON</span>
+                        <span id="syncIndicator" class="text-[9px] text-emerald-400 uppercase font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Sistem Siap Hubung Cloud</span>
                     </div>
                     <div id="activityLogs" class="space-y-1 max-h-[60px] overflow-y-auto text-[11px] font-mono text-zinc-500">
-                        <div>[SYSTEM] Cloud Instan Aktif. Semua data dicadangkan otomatis secara lokal di HP.</div>
+                        <div>[SYSTEM] Menghubungkan alamat database baru...</div>
                     </div>
                 </section>
             </div>
@@ -197,16 +197,15 @@
 
     <script>
         // =================================================================
-        // KUNCI COMENTAR OTOMATIS BERDASARKAN ANON PUBLIC KEY KAMU
+        // DUA DATA SINKRONISASI KAMU SUDAH TERKUNCI SEMPURNA DI SINI, GAES!
         // =================================================================
         const SUPABASE_ANON_KEY = "sb_publishable_LWRcq8BpbjsH0obhPvVYuA_7oNJ02HI";
-        const SUPABASE_URL = "https://lwrcq8bpbjsh0obhpvvy.supabase.co"; 
+        const SUPABASE_URL = "https://banxtubpdekpdajadupz.supabase.co"; 
         // =================================================================
 
         let dataMasterItem = [];
         let dataMasterRouting = [];
         let currentWipState = [];
-        let currentGudangState = [];
 
         function addLog(message) {
             const container = document.getElementById('activityLogs');
@@ -253,10 +252,14 @@
                     proses = await supabaseFetch('master_routing');
                     saveToLocalBackup('items', items);
                     saveToLocalBackup('proses', proses);
+                    document.getElementById('syncIndicator').className = "text-[9px] text-emerald-400 uppercase font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
+                    document.getElementById('syncIndicator').innerText = "Cloud Online Sync ON";
                 } catch (e) {
-                    addLog("⚠️ Mode Offline Aktif. Membaca data backup HP.");
+                    addLog("⚠️ Koneksi Offline. Membaca data backup HP.");
                     items = getLocalBackup('items') || [];
                     proses = getLocalBackup('proses') || [];
+                    document.getElementById('syncIndicator').className = "text-[9px] text-amber-400 uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20";
+                    document.getElementById('syncIndicator').innerText = "Mode Backup Lokal";
                 }
 
                 dataMasterItem = items;
