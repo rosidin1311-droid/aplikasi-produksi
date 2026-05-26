@@ -295,9 +295,11 @@
     </div>
 
     <script>
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000/api'
-            : window.location.origin + '/api';
+       // Inisialisasi Supabase
+const SUPABASE_URL = 'https://banxtubpdekpdajadupz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o';
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let dataMasterItem = [];
         let dataMasterRouting = [];
@@ -320,48 +322,26 @@
 
         async function loadDashboardData() {
     try {
-        initDelDropdowns(); // Inisialisasi dropdown delivery
-
-        const r = await fetch(`${API_URL}/master`);
-        const d = await r.json();
-        dataMasterItem = d.items || [];
-        dataMasterRouting = d.proses || [];
+        // Mengambil data dari tabel master_items
+        const { data: items, error: errItems } = await supabase.from('master_items').select('*');
+        dataMasterItem = items || [];
         
-        // ISI DROPDOWN UTAMA: PILIH CUSTOMER
+        // Render Dropdown Customer (sama seperti logika lama Anda)
         const prodCust = document.getElementById('prodCust');
         const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
-        
-        let custHtml = '<option value="">-- Pilih Customer --</option>';
-        uniqueCustomers.forEach(cust => {
-            custHtml += `<option value="${cust}">${cust}</option>`;
-        });
-        prodCust.innerHTML = custHtml;
+        prodCust.innerHTML = '<option value="">-- Pilih Customer --</option>' + 
+                             uniqueCustomers.map(c => `<option value="${c}">${c}</option>`).join('');
 
-        // Reset Dropdown turunan
-        document.getElementById('prodJenis').innerHTML = '<option value="">-- Pilih Jenis --</option>';
-        document.getElementById('prodJenis').disabled = true;
-        document.getElementById('prodItem').innerHTML = '<option value="">-- Pilih Kode Item --</option>';
-        document.getElementById('prodItem').disabled = true;
-        document.getElementById('prodProses').innerHTML = '<option value="">-- Pilih Proses --</option>';
-
-        // Dropdown Form Delivery
-        const delSelect = document.getElementById('delItem');
-        let optDel = '<option value="">-- Pilih Item --</option>';
-        dataMasterItem.forEach(it => { optDel += `<option value="${it.id}">${it.customer} | ${it.jenis_barang} | ${it.nama_item}</option>`; });
-        delSelect.innerHTML = optDel;
-
-        const resWip = await fetch(`${API_URL}/wip`);
-        const resData = await resWip.json();
-        currentWipState = resData.wip || [];
-        currentGudangState = resData.gudang || [];
+        // Mengambil data WIP dan Gudang
+        const { data: wipData } = await supabase.from('stok_wip').select('*');
+        currentWipState = wipData || [];
 
         renderWipTable(currentWipState);
-        renderGudangTable(currentGudangState);
+        console.log("Data berhasil dimuat dari Supabase!");
     } catch (err) { 
-        console.error("Gagal memuat dashboard:", err); 
+        console.error("Gagal memuat dari Supabase:", err); 
     }
-}
-
+});
 
         // TRIGGER DROPDOWN TIER 2: JENIS BARANG
         function updateDropdownJenis() {
@@ -505,37 +485,30 @@
             }
         });
 
-        // HANDLER SUBMIT PRODUKSI TERBARU (MENGGUNAKAN ELEMEN TERPISAH)
         document.getElementById('formProduksi').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const customer = document.getElementById('prodCust').value;
-            const jenisBoxRaw = document.getElementById('prodJenis').value;
-            const jenis_barang = `${customer} - ${jenisBoxRaw}`;
-            
-            const selectItem = document.getElementById('prodItem');
-            const nama_item = selectItem.options[selectItem.selectedIndex].text;
-            
-            const shift_kerja = document.getElementById('prodShift').value;
-            const proses_sekarang = document.getElementById('prodProses').value;
-            const jumlah_ok = parseInt(document.getElementById('prodQty').value) || 0;
+    e.preventDefault();
+    const customer = document.getElementById('prodCust').value;
+    const nama_item = document.getElementById('prodItem').options[document.getElementById('prodItem').selectedIndex].text;
+    const jumlah_ok = parseInt(document.getElementById('prodQty').value);
 
-            const itemSelected = dataMasterItem.find(i => i.id == selectItem.value);
-            const urutanProsesItem = dataMasterRouting
-                .filter(r => r.jenis_barang === `${itemSelected.customer} - ${itemSelected.jenis_barang}` || r.jenis_barang === itemSelected.jenis_barang)
-                .sort((a,b) => (a.urutan_proses || 0) - (b.urutan_proses || 0));
+    // Kirim data ke tabel production_logs
+    const { data, error } = await supabase
+        .from('production_logs')
+        .insert([{ 
+            customer: customer, 
+            nama_item: nama_item, 
+            jumlah_ok: jumlah_ok,
+            proses_sekarang: document.getElementById('prodProses').value,
+            shift_kerja: document.getElementById('prodShift').value
+        }]);
 
-            const indeksSekarang = urutanProsesItem.findIndex(r => r.nama_proses === proses_sekarang);
-            if(indeksSekarang > 0) {
-                const prosesSebelumnya = urutanProsesItem[indeksSekarang - 1].nama_proses;
-                const matchWipSebelumnya = currentWipState.find(w => w.customer === customer && w.nama_item === nama_item && (w.proses_sekarang === prosesSebelumnya || w.nama_proses === prosesSebelumnya));
-                const ketersediaanWip = matchWipSebelumnya ? parseInt(matchWipSebelumnya.sisa_wip) : 0;
-
-                if(jumlah_ok > ketersediaanWip) {
-                    alert(`❌ VALIDASI ERROR: Melampaui sisa barang di stasiun sebelumnya (${prosesSebelumnya}: ${ketersediaanWip} Pcs).`);
-                    return;
-                }
-            }
-
+    if (error) {
+        alert("Gagal simpan: " + error.message);
+    } else {
+        alert("Data tersimpan di Supabase!");
+        loadDashboardData();
+    }
+});
             try {
                 const res = await fetch(`${API_URL}/produksi`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
