@@ -51,6 +51,7 @@ document.getElementById('formProduksi').addEventListener('submit', async (e) => 
 });
 
 window.onload = loadDashboardData;
+
 function renderWipTable(data) {
     const tbodyWip = document.getElementById('tabelWip');
     if (!tbodyWip) return;
@@ -62,17 +63,23 @@ function renderWipTable(data) {
 
     tbodyWip.innerHTML = data.map(w => {
         return `
-            <tr class="hover:bg-zinc-900/40 transition-colors">
+            <tr class="hover:bg-zinc-900/40 transition-colors border-b border-zinc-800/40">
                 <td class="px-5 py-3.5 font-medium text-zinc-300">${w.customer || '-'}</td>
                 <td class="px-4 py-3.5 text-zinc-400">${w.jenis_barang || '-'}</td>
                 <td class="px-4 py-3.5 font-mono text-zinc-400">${w.nama_item || '-'}</td>
                 <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${w.shift_kerja || '-'}</td>
                 <td class="px-4 py-3.5 text-center">
-                    <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">${w.proses_sekarang || '-'}</span>
+                    <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">
+                        ${w.proses_sekarang || '-'}
+                    </span>
                 </td>
-                <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-amber-400">${Number(w.sisa_wip || 0).toLocaleString('id-ID')}</td>
+                <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-amber-400">
+                    ${Number(w.sisa_wip || 0).toLocaleString('id-ID')}
+                </td>
                 <td class="px-4 py-3.5 text-center">
-                    <button onclick="alert('Fitur koreksi akan segera aktif')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-lg hover:bg-amber-500 hover:text-black transition-all cursor-pointer">✏️ Adjust</button>
+                    <button onclick="alert('Fitur koreksi akan segera aktif')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-lg hover:bg-amber-500 hover:text-black transition-all cursor-pointer">
+                        ✏️ Adjust
+                    </button>
                 </td>
             </tr>
         `;
