@@ -39,10 +39,22 @@
             return;
         }
         
-        renderWipTable(data || []);
-    } catch (err) {
-        console.error("Gagal konek:", err);
+ function renderWipTable(data) {
+    const tbodyWip = document.getElementById('tabelWip');
+    if (!tbodyWip) return;
+    if (data.length === 0) {
+        tbodyWip.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Data Kosong</td></tr>';
+        return;
     }
+    tbodyWip.innerHTML = data.map(w => `
+        <tr class="border-b border-zinc-800 hover:bg-zinc-900">
+            <td class="p-3">${w.customer || '-'}</td>
+            <td class="p-3">${w.nama_item || '-'}</td>
+            <td class="p-3">${w.shift_kerja || '-'}</td>
+            <td class="p-3">${w.proses_sekarang || '-'}</td>
+            <td class="p-3 text-right font-bold text-amber-400">${w.sisa_wip || 0}</td>
+        </tr>
+    `).join('');
 }
         window.onload = loadDashboardData;
     </script>
