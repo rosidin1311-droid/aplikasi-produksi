@@ -13,54 +13,36 @@
                 <tr class="border-b border-zinc-800">
                     <th class="p-3">Customer</th>
                     <th class="p-3">Item</th>
-                    <th class="p-3">Shift</th>
-                    <th class="p-3">Proses</th>
-                    <th class="p-3 text-right">Sisa WIP</th>
+                    <th class="p-3">Jenis</th>
                 </tr>
             </thead>
             <tbody id="tabelWip">
-                <tr><td colspan="5" class="p-4 text-center">Memuat data...</td></tr>
+                <tr><td colspan="3" class="p-4 text-center">Memuat...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://banxtubpdekpdajadupz.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabase = supabase.createClient('https://banxtubpdekpdajadupz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o');
 
-        async function loadDashboardData() {
-            try {
-                const { data, error } = await supabase.from('stok_wip').select('*');
-                if (error) throw error;
-                renderWipTable(data || []);
-            } catch (err) {
-                console.error("Gagal ambil data:", err);
-                document.getElementById('tabelWip').innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Gagal memuat data</td></tr>';
+        async function loadData() {
+            const { data } = await supabase.from('stok_wip').select('*');
+            const tbody = document.getElementById('tabelWip');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Data Kosong</td></tr>';
+                return;
             }
+
+            tbody.innerHTML = data.map(w => `
+                <tr class="border-b border-zinc-800">
+                    <td class="p-3">${w.customer || '-'}</td>
+                    <td class="p-3">${w.nama_item || '-'}</td>
+                    <td class="p-3">${w.jenis_barang || '-'}</td>
+                </tr>
+            `).join('');
         }
-
-        function renderWipTable(data) {
-    const tbodyWip = document.getElementById('tabelWip');
-    if (!tbodyWip) return;
-
-    if (!data || data.length === 0) {
-        tbodyWip.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-zinc-500">Data Kosong</td></tr>';
-        return;
-    }
-
-    tbodyWip.innerHTML = data.map(w => `
-        <tr class="border-b border-zinc-800 hover:bg-zinc-900">
-            <td class="p-3">${w.customer || '-'}</td>
-            <td class="p-3">${w.nama_item || '-'}</td>
-            <td class="p-3">${w.shift_kerja || '-'}</td>
-            <td class="p-3">${w.proses_sekarang || '-'}</td>
-            <td class="p-3 text-right font-bold text-amber-400">${w.sisa_wip || 0}</td>
-        </tr>
-    `).join('');
-}
-
-        window.onload = loadDashboardData;
+        window.onload = loadData;
     </script>
 </body>
 </html>
