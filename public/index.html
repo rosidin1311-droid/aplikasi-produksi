@@ -43,12 +43,9 @@
         function renderWipTable(data) {
     const tbodyWip = document.getElementById('tabelWip');
     if (!tbodyWip) return;
-    
-    // Debug: Cek apa isi data yang diterima
-    console.log("Data yang diterima:", data);
 
     if (!data || data.length === 0) {
-        tbodyWip.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Data Kosong</td></tr>';
+        tbodyWip.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-zinc-500">Data Kosong</td></tr>';
         return;
     }
 
@@ -56,10 +53,9 @@
         <tr class="border-b border-zinc-800 hover:bg-zinc-900">
             <td class="p-3">${w.customer || '-'}</td>
             <td class="p-3">${w.nama_item || '-'}</td>
-            <td class="p-3">${w.shift_kerja || 'Shift 1'}</td>
-            <td class="p-3">${w.proses_sekarang || 'Proses'}</td>
-            <td class="p-3 text-right font-bold text-amber-400">
-            ${w.jumlah !== undefined ? w.jumlah : '0'}</td>
+            <td class="p-3">${w.shift_kerja || '-'}</td>
+            <td class="p-3">${w.proses_sekarang || '-'}</td>
+            <td class="p-3 text-right font-bold text-amber-400">${w.sisa_wip || 0}</td>
         </tr>
     `).join('');
 }
