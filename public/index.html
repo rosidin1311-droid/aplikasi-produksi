@@ -2,47 +2,49 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Monitor Produksi</title>
+    <title>Monitor Produksi - Realtime</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-neutral-950 text-zinc-100 p-5">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="border-b border-zinc-800">
-                    <th class="p-3">Customer</th>
-                    <th class="p-3">Item</th>
-                    <th class="p-3">Jenis</th>
-                </tr>
-            </thead>
-            <tbody id="tabelWip">
-                <tr><td colspan="3" class="p-4 text-center">Memuat...</td></tr>
-            </tbody>
-        </table>
-    </div>
+<body class="bg-neutral-950 text-zinc-100 p-8">
+    <h1 class="text-2xl font-bold mb-6">Monitor Stok WIP</h1>
+    <table class="w-full text-left border-collapse bg-zinc-900 rounded-lg overflow-hidden">
+        <thead>
+            <tr class="bg-zinc-800">
+                <th class="p-4">Customer</th>
+                <th class="p-4">Item</th>
+                <th class="p-4">Proses</th>
+                <th class="p-4">Sisa WIP</th>
+            </tr>
+        </thead>
+        <tbody id="tabelWip">
+            <tr><td colspan="4" class="p-4 text-center">Memuat data dari Supabase...</td></tr>
+        </tbody>
+    </table>
 
     <script>
-        const supabase = supabase.createClient('https://banxtubpdekpdajadupz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o');
+        // Ganti dengan URL dan ANON KEY dari project Supabase Anda (Settings > API)
+        const supabase = supabase.createClient('https://banxtubpdekpdajadupz.supabase.co', 'YOUR_ANON_KEY');
 
         async function loadData() {
-            const { data } = await supabase.from('stok_wip').select('*');
+            const { data, error } = await supabase.from('stok_wip').select('*');
             const tbody = document.getElementById('tabelWip');
             
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Data Kosong</td></tr>';
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-red-500">Error: ${error.message}</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = data.map(w => `
                 <tr class="border-b border-zinc-800">
-                    <td class="p-3">${w.customer || '-'}</td>
-                    <td class="p-3">${w.nama_item || '-'}</td>
-                    <td class="p-3">${w.jenis_barang || '-'}</td>
+                    <td class="p-4">${w.customer}</td>
+                    <td class="p-4">${w.nama_item}</td>
+                    <td class="p-4">${w.proses_sekarang || '-'}</td>
+                    <td class="p-4 font-bold text-amber-400">${w.sisa_wip}</td>
                 </tr>
             `).join('');
         }
-        window.onload = loadData;
+        loadData();
     </script>
 </body>
 </html>
