@@ -30,29 +30,20 @@
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadDashboardData() {
-            try {
-                const { data } = await supabase.from('stok_wip').select('*');
-                const tbody = document.getElementById('tabelWip');
-                
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Data Kosong</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = data.map(w => `
-                    <tr class="border-b border-zinc-800/50 hover:bg-zinc-900">
-                        <td class="p-3">${w.customer || '-'}</td>
-                        <td class="p-3">${w.nama_item || '-'}</td>
-                        <td class="p-3">${w.shift_kerja || '-'}</td>
-                        <td class="p-3"><span class="bg-amber-500/10 text-amber-400 px-2 py-1 rounded text-xs">${w.proses_sekarang || '-'}</span></td>
-                        <td class="p-3 text-right font-mono text-amber-400">${Number(w.sisa_wip || 0).toLocaleString()}</td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                console.error("Error:", err);
-            }
+    try {
+        // Pastikan nama tabel di sini sama persis dengan yang ada di Supabase
+        const { data, error } = await supabase.from('stok_wip').select('*');
+        
+        if (error) {
+            console.error("Error dari Supabase:", error);
+            return;
         }
-
+        
+        renderWipTable(data || []);
+    } catch (err) {
+        console.error("Gagal konek:", err);
+    }
+}
         window.onload = loadDashboardData;
     </script>
 </body>
