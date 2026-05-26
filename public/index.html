@@ -58,7 +58,8 @@
             <td class="p-3">${w.nama_item || '-'}</td>
             <td class="p-3">${w.shift_kerja || 'Shift 1'}</td>
             <td class="p-3">${w.proses_sekarang || 'Proses'}</td>
-            <td class="p-3 text-right font-bold text-amber-400">${w.sisa_wip !== undefined ? w.sisa_wip : '0'}</td>
+            <td class="p-3 text-right font-bold text-amber-400">
+            ${w.jumlah !== undefined ? w.jumlah : '0'}</td>
         </tr>
     `).join('');
 }
