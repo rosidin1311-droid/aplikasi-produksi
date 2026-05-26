@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-neutral-950 text-zinc-100 p-5">
-
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
@@ -20,7 +19,8 @@
                 </tr>
             </thead>
             <tbody id="tabelWip">
-                </tbody>
+                <tr><td colspan="5" class="p-4 text-center">Memuat data...</td></tr>
+            </tbody>
         </table>
     </div>
 
@@ -30,32 +30,34 @@
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadDashboardData() {
-    try {
-        // Pastikan nama tabel di sini sama persis dengan yang ada di Supabase
-        const { data, error } = await supabase.from('stok_wip').select('*');
-        
-        if (error) {
-            console.error("Error dari Supabase:", error);
-            return;
+            try {
+                const { data, error } = await supabase.from('stok_wip').select('*');
+                if (error) throw error;
+                renderWipTable(data || []);
+            } catch (err) {
+                console.error("Gagal ambil data:", err);
+                document.getElementById('tabelWip').innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Gagal memuat data</td></tr>';
+            }
         }
-        
- function renderWipTable(data) {
-    const tbodyWip = document.getElementById('tabelWip');
-    if (!tbodyWip) return;
-    if (data.length === 0) {
-        tbodyWip.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Data Kosong</td></tr>';
-        return;
-    }
-    tbodyWip.innerHTML = data.map(w => `
-        <tr class="border-b border-zinc-800 hover:bg-zinc-900">
-            <td class="p-3">${w.customer || '-'}</td>
-            <td class="p-3">${w.nama_item || '-'}</td>
-            <td class="p-3">${w.shift_kerja || '-'}</td>
-            <td class="p-3">${w.proses_sekarang || '-'}</td>
-            <td class="p-3 text-right font-bold text-amber-400">${w.sisa_wip || 0}</td>
-        </tr>
-    `).join('');
-}
+
+        function renderWipTable(data) {
+            const tbodyWip = document.getElementById('tabelWip');
+            if (!tbodyWip) return;
+            if (!data || data.length === 0) {
+                tbodyWip.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-zinc-500">Data Kosong</td></tr>';
+                return;
+            }
+            tbodyWip.innerHTML = data.map(w => `
+                <tr class="border-b border-zinc-800 hover:bg-zinc-900">
+                    <td class="p-3">${w.customer || '-'}</td>
+                    <td class="p-3">${w.nama_item || '-'}</td>
+                    <td class="p-3">${w.shift_kerja || '-'}</td>
+                    <td class="p-3">${w.proses_sekarang || '-'}</td>
+                    <td class="p-3 text-right font-bold text-amber-400">${w.sisa_wip || 0}</td>
+                </tr>
+            `).join('');
+        }
+
         window.onload = loadDashboardData;
     </script>
 </body>
