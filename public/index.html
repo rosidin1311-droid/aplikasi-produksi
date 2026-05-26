@@ -1,91 +1,46 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-// 1. Inisialisasi Supabase
-const SUPABASE_URL = 'https://banxtubpdekpdajadupz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MONITOR WIP MANUFAKTUR V3.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-neutral-950 text-zinc-100">
+    <table class="w-full">
+        <tbody id="tabelWip"></tbody>
+    </table>
 
-let dataMasterItem = [];
-let currentWipState = [];
+    <script>
+        const SUPABASE_URL = 'https://banxtubpdekpdajadupz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbnh0dWJwZGVrcGRhamFkdXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MDg0NTQsImV4cCI6MjA5NTE4NDQ1NH0.pcW8pEWxZefCx6V6LMAL61LBt4H8P5jdTN8WM8z7a8o';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. Fungsi Load Data Utama
-async function loadDashboardData() {
-    try {
-        const { data: items } = await supabase.from('master_items').select('*');
-        const { data: wipData } = await supabase.from('stok_wip').select('*');
-        
-        dataMasterItem = items || [];
-        currentWipState = wipData || [];
-        
-        const prodCust = document.getElementById('prodCust');
-        if(prodCust) {
-            const uniqueCustomers = [...new Set(dataMasterItem.map(item => item.customer))];
-            prodCust.innerHTML = '<option value="">-- Pilih Customer --</option>' + 
-                                 uniqueCustomers.map(c => `<option value="${c}">${c}</option>`).join('');
+        async function loadDashboardData() {
+            const { data: wipData } = await supabase.from('stok_wip').select('*');
+            renderWipTable(wipData || []);
         }
-        
-        if (typeof renderWipTable === 'function') renderWipTable(currentWipState);
-        console.log("Supabase terhubung!");
-    } catch (err) { console.error("Error:", err); }
-}
 
-// 3. Submit Produksi
-document.getElementById('formProduksi').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const customer = document.getElementById('prodCust').value;
-    const itemSelect = document.getElementById('prodItem');
-    const nama_item = itemSelect.options[itemSelect.selectedIndex].text;
-    const jumlah_ok = parseInt(document.getElementById('prodQty').value);
-    
-    const { error } = await supabase.from('production_logs').insert([{ 
-        customer, nama_item, jumlah_ok, 
-        proses_sekarang: document.getElementById('prodProses').value, 
-        shift_kerja: document.getElementById('prodShift').value 
-    }]);
-
-    if (error) alert("Gagal: " + error.message);
-    else {
-        alert("🚀 Data tersimpan!");
-        document.getElementById('formProduksi').reset();
-        loadDashboardData();
-    }
-});
-
-window.onload = loadDashboardData;
-
-function renderWipTable(data) {
-    const tbodyWip = document.getElementById('tabelWip');
-    if (!tbodyWip) return;
-
-    if (!data || data.length === 0) {
-        tbodyWip.innerHTML = `<tr><td colspan="7" class="px-5 py-8 text-center text-zinc-500 font-medium">✨ Lantai Produksi Bersih! Tidak ada antrean sisa WIP.</td></tr>`;
-        return;
-    }
-
-    tbodyWip.innerHTML = data.map(w => {
-        return `
-            <tr class="hover:bg-zinc-900/40 transition-colors border-b border-zinc-800/40">
-                <td class="px-5 py-3.5 font-medium text-zinc-300">${w.customer || '-'}</td>
-                <td class="px-4 py-3.5 text-zinc-400">${w.jenis_barang || '-'}</td>
-                <td class="px-4 py-3.5 font-mono text-zinc-400">${w.nama_item || '-'}</td>
-                <td class="px-4 py-3.5 text-center text-zinc-400 font-medium">${w.shift_kerja || '-'}</td>
-                <td class="px-4 py-3.5 text-center">
-                    <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold tracking-wider uppercase">
-                        ${w.proses_sekarang || '-'}
-                    </span>
-                </td>
-                <td class="px-5 py-3.5 text-right font-mono text-sm font-bold text-amber-400">
-                    ${Number(w.sisa_wip || 0).toLocaleString('id-ID')}
-                </td>
-                <td class="px-4 py-3.5 text-center">
-                    <button onclick="alert('Fitur koreksi akan segera aktif')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-lg hover:bg-amber-500 hover:text-black transition-all cursor-pointer">
-                        ✏️ Adjust
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-window.onload = loadDashboardData;
-</script>
+        function renderWipTable(data) {
+            const tbodyWip = document.getElementById('tabelWip');
+            if (!tbodyWip) return;
+            if (data.length === 0) {
+                tbodyWip.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Data Kosong</td></tr>';
+                return;
+            }
+            tbodyWip.innerHTML = data.map(w => `
+                <tr class="border-b border-zinc-800">
+                    <td class="p-3">${w.customer}</td>
+                    <td class="p-3">${w.jenis_barang}</td>
+                    <td class="p-3">${w.nama_item}</td>
+                    <td class="p-3">${w.shift_kerja}</td>
+                    <td class="p-3">${w.proses_sekarang}</td>
+                    <td class="p-3 font-bold text-amber-400">${w.sisa_wip}</td>
+                </tr>
+            `).join('');
+        }
+        window.onload = loadDashboardData;
+    </script>
 </body>
+</html>
